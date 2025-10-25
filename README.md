@@ -9,3 +9,4 @@ Clone the repository and create your virtual environment.
 git clone [https://github.com/nrebolloso/hemalink](https://github.com/nrebolloso/hemalink)
 cd hemalink
 python3 -m venv .venv
+fastapi, uvicorn, scikit-learn, pandas
