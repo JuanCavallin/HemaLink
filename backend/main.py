@@ -2,6 +2,11 @@ from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List
 import uvicorn
+import cv2
+import numpy as np
+import pytesseract
+import re
+# ----------------------------------------
 
 app = FastAPI()
 
@@ -18,25 +23,69 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# change this to fit data we need
+OCR_PATTERNS = {
+    "White blood cells": r"(?:White blood cells|WBC).*?\s+([\d,]+\.?\d*)",
+    "Haemoglobin": r"(?:Haemoglobin|HGB).*?\s+([\d,]+\.?\d*)",
+    "Platelets": r"(?:Platelets|PLT).*?\s+([\d,]+\.?\d*)",
+    "LDL": r"LDL Chol.*?\s+([\d,]+\.?\d*)",
+    "Triglycerides": r"Triglycerides.*?\s+([\d,]+\.?\d*)",
+    "HDL": r"HDL Chol.*?\s+([\d,]+\.?\d*)",
+    "Total Cholesterol": r"Total Chol.*?\s+([\d,]+\.?\d*)",
+    "Glucose": r"(?:Glucose|Glicaemia).*?\s+([\d,]+\.?\d*)",
+}
+
+
 @app.post("/uploadfiles/")
 async def create_upload_files(files: List[UploadFile] = File(...)):
     """
-    Receives one or more files from the frontend.
-    Prints the filename of each file to the terminal.
+    Receives image files from the frontend, pre-processes them,
+    runs Tesseract OCR, parses the text for lab results,
+    and returns the structured data.
     """
     
     print("--- Files Received by Python ---")
     
-    filenames = []
+    extraction_results = {}
+
     for file in files:
-        print(f"File Name: {file.filename}, Type: {file.content_type}")
-        filenames.append(file.filename)
+        print(f"Processing File: {file.filename}, Type: {file.content_type}")
+        
+        contents = await file.read()
+        
+        nparr = np.frombuffer(contents, np.uint8)
+        
+        img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        
+        thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
+        
+        myconfig = r"--psm 6 --oem 3"
+        
+        text = pytesseract.image_to_string(thresh, config=myconfig)
+        
+        print(f"--- Extracted Text from {file.filename} ---")
+        print(text)
+        print("-----------------------------------------")
+        
+        file_results = {}
+        for key, pattern in OCR_PATTERNS.items():
+            match = re.search(pattern, text, re.IGNORECASE)
+            if match:
+                value = match.group(1).replace(',', '')
+                file_results[key] = value
+                print(f"Found: {key} -> {value}")
+            else:
+                file_results[key] = "Not Found"
+
+        extraction_results[file.filename] = file_results
         
     print("----------------------------------")
 
     return {
-        "message": f"Python backend successfully received {len(filenames)} file(s).",
-        "received_filenames": filenames
+        "message": "Files processed successfully!",
+        "results": extraction_results
     }
 
 if __name__ == "__main__":
