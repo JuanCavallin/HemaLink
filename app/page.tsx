@@ -6,8 +6,7 @@ export default function Home() {
       {/* hero */}
       <section
         id="home"
-        // fix image later (rive animation)
-        className="flex min-h-screen flex-col items-center justify-center bg-[url('/image_600e22.jpg')] bg-cover bg-center bg-gray-900 bg-blend-multiply p-16 font-sans"
+        className="flex min-h-screen flex-col items-center justify-center bg-[url('/herobanner.jpeg')] bg-cover bg-center bg-gray-500 bg-blend-multiply p-16 font-sans"
       >
         <div className="flex flex-col items-center gap-8 text-center">
           <h1 className="text-5xl font-bold tracking-tight text-white">
@@ -18,7 +17,7 @@ export default function Home() {
           </p>
           <Link
             href="/dashboard"
-            className="rounded-lg bg-blue-600 px-8 py-4 text-lg font-semibold text-white shadow-lg transition-transform duration-200 hover:scale-105 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            className="rounded-lg bg-red-800 px-8 py-4 text-lg font-semibold text-white shadow-lg transition-transform duration-200 hover:scale-105 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
           >
             Start Analysis
           </Link>
