@@ -17,8 +17,9 @@ from sklearn.metrics import (
 )
 from sklearn.pipeline import Pipeline
 from sklearn.compose import ColumnTransformer
-#Diabetes Dataset from UCI ML Repo
+import joblib
 
+#Diabetes Dataset from UCI ML Repo
 from ucimlrepo import fetch_ucirepo
 
 '''
@@ -158,12 +159,40 @@ def train_models(data, categorical_features, numerical_features):
     #pd.to_pickle(model, model_output_path)
     return model
     
+
+def train_random_forest_classifier(data, categorical_features, numerical_features): 
+    rf_pre = ColumnTransformer(
+        transformers=[
+            # one-hot Gender; for binary it will drop one column automatically
+            ("cat", OneHotEncoder(handle_unknown="ignore", drop="if_binary"), categorical_features),
+            ("num", "passthrough", numerical_features),
+        ]
+    )
     
+    rf_clf = RandomForestClassifier(
+    n_estimators=400,
+    max_depth=None,
+    min_samples_split=2,
+    min_samples_leaf=1,
+    class_weight="balanced_subsample",  # helpful if class imbalance exists
+    random_state=42
+    )
+    X = data.drop('Target', axis=1)
+    y = data['Target']
+    rf = Pipeline(steps=[("prep", rf_pre), ("clf", rf_clf)])
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y) 
+    rf.fit(X_train, y_train)
+    evaluate_model(rf, X_test, y_test, "Random Forest Classifier")
+    return rf
+
+
 def main() -> None:
     
     #Train amenia dataset
     anemia_data = pd.read_csv("Datasets/anemia.csv")
     anemia_data.columns = ["Gender", "Hemoglobin", "MCH", "MCHC", "MCV", "Target"]
+    anemia_rf = train_random_forest_classifier(anemia_data, categorical_features=["Gender"], numerical_features=["Hemoglobin", "MCH", "MCHC", "MCV"])
+    
     print(anemia_data)
     # Filter into two datasets: gender = 1 and gender = 0
     # Use boolean indexing (DataFrame.filter is for selecting columns, not rows)
