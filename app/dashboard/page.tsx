@@ -2,8 +2,10 @@
 
 import { useState, useRef, DragEvent, ChangeEvent } from 'react';
 import { Upload, FileText, XCircle, Loader2, FileImage, FileType } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 export default function DashboardPage() {
+  const router = useRouter();
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [error, setError] = useState<string | null>(null); //local file type and size validation
   
@@ -110,6 +112,28 @@ export default function DashboardPage() {
       console.log('Upload successful:', result);
       setUploadSuccess(result);
       setUploadedFiles([]);
+
+      // Save to localStorage history and route to Summary
+      try {
+        const HISTORY_KEY = 'hemalink:resultsHistory';
+        const now = new Date();
+        const filenames = Object.keys(result?.results || {});
+        const label = filenames.length ? filenames.join(', ') : `Result ${now.toLocaleString()}`;
+        const item = {
+          id: now.toISOString(),
+          createdAt: now.toISOString(),
+          label,
+          payload: result,
+        };
+        const raw = typeof window !== 'undefined' ? window.localStorage.getItem(HISTORY_KEY) : null;
+        const arr = raw ? (JSON.parse(raw) as any[]) : [];
+        const updated = [item, ...arr].slice(0, 20); // keep last 20
+        if (typeof window !== 'undefined') window.localStorage.setItem(HISTORY_KEY, JSON.stringify(updated));
+        // Navigate to summary page for a better UX
+        router.push('/summary');
+      } catch (e) {
+        console.warn('Could not persist results to localStorage', e);
+      }
 
     } catch (err: any) {
       console.error('Upload failed:', err);
