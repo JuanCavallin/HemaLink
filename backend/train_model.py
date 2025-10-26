@@ -192,7 +192,7 @@ def main() -> None:
     anemia_data = pd.read_csv("Datasets/anemia.csv")
     anemia_data.columns = ["Gender", "Hemoglobin", "MCH", "MCHC", "MCV", "Target"]
     anemia_rf = train_random_forest_classifier(anemia_data, categorical_features=["Gender"], numerical_features=["Hemoglobin", "MCH", "MCHC", "MCV"])
-    
+    joblib.dump(anemia_rf, 'ML_Models/anemia_rf_model.pkl')
     print(anemia_data)
     # Filter into two datasets: gender = 1 and gender = 0
     # Use boolean indexing (DataFrame.filter is for selecting columns, not rows)
@@ -203,9 +203,9 @@ def main() -> None:
     #So far, RF is the best for anemia dataset
     
     #Thyroid Database
-    thyroid_data = pd.read_csv("Datasets/thyroid.csv")
-    thyroid_data.columns = ["age", "sex", "TSH", "T3", "TT4", "T4U", "FTI", "TBG", "Target"]
-    
+    #columns = ["age", "sex", "TSH", "T3", "TT4", "T4U", "FTI", "TBG", "Target"]
+    #thyroid_data = pd.read_csv("Datasets/thyroidDF.csv", usecols=range(len(columns)), names=columns)
+    #train_models(thyroid_data, categorical_features=["sex"], numerical_features=["age", "TSH", "T3", "TT4", "T4U", "FTI", "TBG"])
     
     '''
     #Load up the diabetes dataset from UCI ML Repo
