@@ -53,4 +53,16 @@ OCR_PATTERNS = {
     "TBG": r"^[\W_]*(?:TBG|Thyroxine-Binding Globulin).*?\s+([<>]?\s*[\d,]+\.?\d*)",
     "Anti-Thyroglobulin": r"^[\W_]*(?:Anti-\s?Thyroglobulin|Anti-TG|Anti-Thyroglobulin Abs|Anti-Thyroglobulin Antibody).*?\s+([<>]?\s*[\d,]+\.?\d*)",
     "Anti-Thyroperoxidase": r"^[\W_]*(?:Anti-Thyroperoxidase|Anti-TPO|Anti-Thyroidperoxidase abs|Anti-Thyroid Peroxidase Antibody|Anti Thyroperoxidase).*?\s+([<>]?\s*[\d,]+\.?\d*)",
+
+    #--- diabetes ---
+    "HbA1c": r"^[\W_]*(?:HbA1c|Glycated Hemoglobin|Hemoglobin A1c).*?\s+([<>]?\s*[\d,]+\.?\d*)",
+    "Insulin_Levels": r"^[\W_]*(?:Insulin Levels?|Fasting Insulin).*?\s+([<>]?\s*[\d,]+\.?\d*)",
+    "HOMA-IR": r"^[\W_]*(?:HOMA-IR|Homeostatic Model Assessment of Insulin Resistance).*?\s+([<>]?\s*[\d,]+\.?\d*)",
+    "OGTT": r"^[\W_]*(?:OGTT|Oral Glucose Tolerance Test).*?\s+([<>]?\s*[\d,]+\.?\d*)",
+    "eGFR": r"^[\W_]*(?:eGFR|Estimated Glomerular Filtration Rate).*?\s+([<>]?\s*[\d,]+\.?\d*)",
+    "Uric_Acid_Levels": r"^[\W_]*(?:Uric Acid Levels?|Serum Uric Acid).*?\s+([<>]?\s*[\d,]+\.?\d*)",
+    "Fructosamine_Levels": r"^[\W_]*(?:Fructosamine Levels?|Serum Fructosamine).*?\s+([<>]?\s*[\d,]+\.?\d*)",
+    "ALT": r"^[\W_]*(?:ALT|Alanine Aminotransferase|SGPT).*?\s+([<>]?\s*[\d,]+\.?\d*)",
+    "C_Peptide": r"^[\W_]*(?:C-Peptide|C Peptide).*?\s+([<>]?\s*[\d,]+\.?\d*)",
+    "Proinsulin_Levels": r"^[\W_]*(?:Proinsulin Levels?|Serum Proinsulin).*?\s+([<>]?\s*[\d,]+\.?\d*)"
 }
