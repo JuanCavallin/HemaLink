@@ -81,7 +81,7 @@ export default function DashboardPage() {
     setUploadError(null);
     setUploadSuccess(null); 
 
-    const FASTAPI_URL = 'http://127.0.0.1:8000/uploadfiles/'; //back end server (may need to change)
+    const FASTAPI_URL = 'http://127.0.0.1:8000/uploadfiles/';
 
     const formData = new FormData();
     uploadedFiles.forEach(file => {
@@ -123,7 +123,7 @@ export default function DashboardPage() {
         <h2 className="mb-8 text-2xl text-center text-gray-400">
           For Auto Disease Ranking
         </h2>
-
+        
         {/* drag and drop file upload */}
         <div
           className={`rounded-lg border-2 border-dashed bg-gray-800 p-12 text-center transition-all duration-200
