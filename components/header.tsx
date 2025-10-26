@@ -24,6 +24,14 @@ export default function Header() {
                         <Link href="/#how-it-works" className="text-sm text-white/85 hover:text-red-400">
                             How it works
                         </Link>
+                        <SignedIn>
+                            <Link href="/dashboard" className="text-sm text-white/85 hover:text-red-400">
+                                Dashboard
+                            </Link>
+                            <Link href="/summary" className="text-sm text-white/85 hover:text-red-400">
+                                Summary
+                            </Link>
+                        </SignedIn>
                     </nav>
 
                     <div className="flex items-center gap-3">
@@ -35,7 +43,10 @@ export default function Header() {
                             </SignInButton>
                         </SignedOut>
                         <SignedIn>
-                            <div className="hidden md:block">
+                            <div className="hidden md:flex items-center gap-3">
+                                <Link href="/summary" className="rounded-md border border-red-800/40 px-3 py-1 text-sm text-white/85 hover:text-white hover:border-red-600/60">
+                                    Summary
+                                </Link>
                                 <UserButton afterSignOutUrl="/" />
                             </div>
                         </SignedIn>
