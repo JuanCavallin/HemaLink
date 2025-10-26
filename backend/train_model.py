@@ -7,10 +7,8 @@ from sklearn.impute import SimpleImputer #theres better imputers but this one's 
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC
-from sklearn.metrics import (
-    accuracy_score, precision_recall_fscore_support,
-    confusion_matrix, roc_auc_score, classification_report
-)
+from sklearn.metrics import accuracy_score, precision_recall_fscore_support, confusion_matrix, roc_auc_score, classification_report
+
 from sklearn.pipeline import Pipeline
 from sklearn.compose import ColumnTransformer
 import joblib
@@ -157,17 +155,20 @@ def train_random_forest_classifier(data, categorical_features, numerical_feature
     X = data.drop('Target', axis=1)
     y = data['Target']
     
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, random_state=42, stratify=y
-    ) 
+    #X_train, X_test, y_train, y_test = train_test_split(
+    #    X, y, test_size=0.2, random_state=42, stratify=y
+    #) 
 
-    print(f"Training on {len(X_train)} samples, testing on {len(X_test)} samples.")
+    #print(f"Training on {len(X_train)} samples, testing on {len(X_test)} samples.")
     
     try:
         name = "Random Forest Classifier"
         print(f"--- Training {name} ---")
-        rf_pipeline.fit(X_train, y_train)
-        evaluate_model(rf_pipeline, X_test, y_test, name)
+        #rf_pipeline.fit(X_train, y_train)
+        #Train with full data
+        rf_pipeline.fit(X, y)
+        #evaluate_model(rf_pipeline, X_test, y_test, name)
+        evaluate_model(rf_pipeline, X, y, name)
         print("-----------------")
     except Exception as e:
         print(f"!!! Failed to train {name}: {e} !!!")
@@ -176,7 +177,7 @@ def train_random_forest_classifier(data, categorical_features, numerical_feature
     return rf_pipeline
 
 
-def main() -> None:
+def old_main() -> None:
     
     script_dir = os.path.dirname(os.path.abspath(__file__))
     
@@ -307,6 +308,99 @@ def main() -> None:
     
     print("\n\n---END---")
 
+def main():
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    #THYROID DATA TRAINED!!!!!
+    '''
+    #Save Thyroid Model into folder
+    thyroid_file_path = os.path.join(script_dir, "Datasets", "thyroidDF.csv")
+    #thyroid_data = pd.read_csv(thyroid_file_path)
+
+    #TODO: get new diabetes data
+    columns = ["age", "sex", "TSH", "T3", "TT4", "T4U", "FTI", "TBG", "Target"]
+
+    thyroid_data = pd.read_csv(
+        thyroid_file_path, 
+        na_values=["?"],
+        usecols=columns
+    )
+
+    print(f"Loaded Thyroid data: {len(thyroid_data)} rows.")
+
+    categorical_features=["sex"]
+    numerical_features=["age", "TSH", "T3", "TT4", "T4U", "FTI", "TBG"]
+
+    print(f"Using {len(numerical_features)} numerical features.")
+    print(f"Using {len(categorical_features)} categorical features.")
+
+    original_target_counts = thyroid_data['Target'].value_counts()
+    print(f"Original Target counts:\n{original_target_counts}")
+
+    thyroid_data['Target'] = thyroid_data['Target'].apply(lambda x: 0 if x == '-' else 1)
+
+    print(f"Cleaned Target counts:\n{thyroid_data['Target'].value_counts()}")
     
+    rf = train_random_forest_classifier(
+        thyroid_data, 
+        categorical_features=categorical_features, 
+        numerical_features=numerical_features
+    )
+    
+    output_dir = os.path.join(script_dir, "ML_Models")
+    os.makedirs(output_dir, exist_ok=True)
+    joblib.dump(rf, os.path.join(output_dir, 'thyroid_rf_model.pkl'))
+    '''
+    print("Running model training...")
+    
+    #Diabetes Dataset (from kaggle)
+    diabetes_file_path_new = os.path.join(script_dir, "Datasets", "diabetes_data.csv")
+    columns = [
+    'Fasting_Blood_Glucose',
+    'HbA1c',
+    'Triglyceride_Levels',
+    'LDL_Cholesterol',
+    'HDL_Cholesterol',
+    'CRP_Levels',
+    'Insulin_Levels',
+    'HOMA_IR',
+    'OGTT',
+    'Creatinine_Levels',
+    'eGFR',
+    'Uric_Acid_Levels',
+    'Fructosamine_Levels',
+    'ALT',
+    'AST',
+    'C_Peptide',
+    'Proinsulin_Levels',
+    'Target'
+    ]
+    diabetes_data_new = pd.read_csv(diabetes_file_path_new, usecols=columns)
+    #Filter by relevant columns
+    categorical_features = []
+    numerical_features = columns[:-1]  # All except Target
+    
+    # Convert target values from 'Negative'/'Positive' to 0/1
+    print(f"Original Target counts:\n{diabetes_data_new['Target'].value_counts()}")
+    diabetes_data_new['Target'] = diabetes_data_new['Target'].apply(lambda x: 0 if x == 'Negative' else 1)
+    print(f"Cleaned Target counts:\n{diabetes_data_new['Target'].value_counts()}")
+    
+    #Tested which model worked best for this dataset, winner is Random Forest Classifier
+    '''
+    train_models(
+    diabetes_data_new, 
+    categorical_features=categorical_features, 
+    numerical_features=numerical_features
+    )
+    '''
+    #Last step, save full fitted data into pickle file
+    rf_diabetes = train_random_forest_classifier(
+        diabetes_data_new, 
+        categorical_features=categorical_features, 
+        numerical_features=numerical_features
+    )
+    
+    output_dir = os.path.join(script_dir, "ML_Models")
+    os.makedirs(output_dir, exist_ok=True)
+    joblib.dump(rf_diabetes, os.path.join(output_dir, 'diabetes_rf_model.pkl'))
 if __name__ == "__main__":
     main()
