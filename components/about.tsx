@@ -16,7 +16,7 @@ export default function About() {
           <span className="bg-gradient-to-r from-red-400 to-rose-500 bg-clip-text text-transparent">About HemaLink</span>
         </h2>
         <p className="mt-4 text-lg text-white/80">
-          HemaLink helps patients and clinicians quickly interpret blood work using explainable AI and clear visualizations. Upload results, get insights, and track trends over time.
+          HemaLink transforms complex lab reports into clear, actionable health insights. We use Explainable AI to analyze your blood work and provide precise interpretations, not just numbers. Upload your results to instantly understand your health, see clear visualizations of your data, and easily track your wellness trends over time.
         </p>
       </motion.div>
     </section>

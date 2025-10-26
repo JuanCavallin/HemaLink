@@ -25,6 +25,34 @@ function parsePrediction(pred?: BackendPredictionString) {
 
 const defaultDiseaseOrder = ["Anemia", "Thyroid", "Diabetes"];
 
+function getTipsForDisease(disease: string): string[] {
+  switch (disease.toLowerCase()) {
+    case "anemia":
+      return [
+        "Consult a doctor for a definitive diagnosis and iron level checks.",
+        "Increase intake of iron-rich foods (red meat, lentils, spinach, fortified cereals).",
+        "Pair iron-rich foods with Vitamin C (citrus fruits, bell peppers) to boost absorption.",
+        "Limit consumption of tea and coffee near mealtimes, as they can inhibit iron absorption.",
+      ];
+    case "thyroid":
+      return [
+        "This result indicates potential thyroid imbalance. Consult an endocrinologist.",
+        "Discuss follow-up tests (like Free T3/T4) with your physician.",
+        "Maintain a diet rich in iodine and selenium, but only under medical guidance.",
+        "Monitor energy levels, weight, and heart rate, and report any changes to your doctor.",
+      ];
+    case "diabetes":
+      return [
+        "A positive signal warrants immediate blood glucose and HbA1c verification with a healthcare provider.",
+        "Focus on a low-glycemic index diet rich in fiber (whole grains, vegetables, legumes).",
+        "Incorporate regular physical activity, aiming for at least 150 minutes of moderate exercise weekly (CDC reccomended).",
+        "Monitor your carbohydrate intake and seek advice from a certified diabetes educator (CDE).",
+      ];
+    default:
+      return [];
+  }
+}
+
 function ConfidenceBar({ value, state }: { value: number | null; state: string }) {
   const base = state === "Positive" ? "bg-red-500" : state === "Negative" ? "bg-green-500" : "bg-gray-500";
   const pct = Math.max(0, Math.min(100, value ?? 0));
@@ -51,6 +79,7 @@ function prettyKey(key: string) {
 
 function pickBiomarkers(raw: Record<string, string>, limit = 8) {
   const priority = [
+    "Gender",
     "Hemoglobin",
     "White blood cells",
     "Red blood cells",
@@ -64,15 +93,44 @@ function pickBiomarkers(raw: Record<string, string>, limit = 8) {
     "CRP Levels",
     "Creatinine Levels",
   ];
+  
+  const uniqueBiomarkers: Record<string, [string, string]> = {};
   const entries = Object.entries(raw).filter(([, v]) => v && v !== "Not Found");
+  
+  const genderEntry = entries.find(([k]) => k === 'Gender');
+  const sexEntry = entries.find(([k]) => k === 'sex');
+
+  if (genderEntry) {
+    uniqueBiomarkers['Gender'] = genderEntry;
+  } else if (sexEntry) {
+    uniqueBiomarkers['Gender'] = ['Gender', sexEntry[1]]; 
+  }
+
+
+  for (const [k, v] of entries) {
+    if (k !== 'sex' && k !== 'Gender') {
+      uniqueBiomarkers[k] = [k, v];
+    }
+  }
+
   const prioritized: Array<[string, string]> = [];
+  const addedKeys = new Set<string>();
+
   for (const p of priority) {
-    const found = entries.find(([k]) => k.toLowerCase() === p.toLowerCase());
-    if (found) prioritized.push(found);
+    const canonicalKey = p === "sex" ? "Gender" : p;
+    if (uniqueBiomarkers[canonicalKey] && !addedKeys.has(canonicalKey)) {
+      prioritized.push(uniqueBiomarkers[canonicalKey]);
+      addedKeys.add(canonicalKey);
+    }
   }
-  for (const e of entries) {
-    if (!prioritized.some(([k]) => k === e[0])) prioritized.push(e);
+
+  for (const key in uniqueBiomarkers) {
+    if (!addedKeys.has(key)) {
+      prioritized.push(uniqueBiomarkers[key]);
+      addedKeys.add(key);
+    }
   }
+  
   return prioritized.slice(0, limit);
 }
 
@@ -86,6 +144,14 @@ export default function ResultsSummary({ data, diseaseOrder = defaultDiseaseOrde
         const predictions = fileResult.predictions || {};
         const diseases = (diseaseOrder.length ? diseaseOrder : Object.keys(predictions)).filter((d) => predictions[d] !== undefined);
         const biomarkers = pickBiomarkers(fileResult.raw_ocr_results);
+        
+        const positiveDiseases = diseases
+          .map(d => ({ 
+            name: d, 
+            parsed: parsePrediction(predictions[d]),
+            tips: getTipsForDisease(d)
+          }))
+          .filter(item => item.parsed.label === "Positive" && item.tips.length > 0);
 
         return (
           <div key={filename} className="rounded-xl border border-gray-800 bg-gray-900 p-6 shadow">
@@ -110,6 +176,25 @@ export default function ResultsSummary({ data, diseaseOrder = defaultDiseaseOrde
                 );
               })}
             </div>
+
+            {/* tips section --- */}
+            {positiveDiseases.length > 0 && (
+              <div className="mt-8 border-t border-gray-800 pt-6">
+                <h5 className="mb-3 text-lg font-bold text-red-400">Actionable Insights & Next Steps</h5>
+                <div className="space-y-6">
+                  {positiveDiseases.map(item => (
+                    <div key={item.name} className="rounded-lg border border-red-800 bg-red-950/20 p-4">
+                      <h6 className="text-md font-semibold text-red-300 mb-3">{item.name} Signal Detected ({item.parsed.confidence?.toFixed(1)}% Confidence)</h6>
+                      <ul className="list-disc ml-4 space-y-2 text-sm text-gray-200">
+                        {item.tips.map((tip, index) => (
+                          <li key={index} className="pl-1">{tip}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="mt-6">
               <h5 className="mb-2 text-sm font-medium text-gray-300">Key biomarkers</h5>

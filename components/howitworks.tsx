@@ -17,7 +17,7 @@ const steps = [
 	},
 	{
 		title: "Track & Act",
-		desc: "Clear recommendations and charts to monitor progress.",
+		desc: "Monitor your progress over time and receive personalized, data-driven tips.",
 		icon: BarChart,
 	},
 ];
