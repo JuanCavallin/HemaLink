@@ -44,9 +44,6 @@ export default function Header() {
                         </SignedOut>
                         <SignedIn>
                             <div className="hidden md:flex items-center gap-3">
-                                <Link href="/summary" className="rounded-md border border-red-800/40 px-3 py-1 text-sm text-white/85 hover:text-white hover:border-red-600/60">
-                                    Summary
-                                </Link>
                                 <UserButton afterSignOutUrl="/" />
                             </div>
                         </SignedIn>
