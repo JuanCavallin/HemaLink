@@ -353,6 +353,7 @@ def main():
     print("Running model training...")
     
     #Diabetes Dataset (from kaggle)
+    '''
     diabetes_file_path_new = os.path.join(script_dir, "Datasets", "diabetes_data.csv")
     columns = [
     'Fasting_Blood_Glucose',
@@ -386,11 +387,14 @@ def main():
     
     #Tested which model worked best for this dataset, winner is Random Forest Classifier
     '''
+    '''
     train_models(
     diabetes_data_new, 
     categorical_features=categorical_features, 
     numerical_features=numerical_features
     )
+    '''
+
     '''
     #Last step, save full fitted data into pickle file
     rf_diabetes = train_random_forest_classifier(
@@ -402,5 +406,76 @@ def main():
     output_dir = os.path.join(script_dir, "ML_Models")
     os.makedirs(output_dir, exist_ok=True)
     joblib.dump(rf_diabetes, os.path.join(output_dir, 'diabetes_rf_model.pkl'))
+    
+    '''
+    
+    #First, test ckd model training
+    #Note: in other spot gotta use result of diabetes model training for this
+    columns = [
+    "Age",
+    "Blood Glucose Random (mg/dL)",
+    "Blood Urea (mg/dL)",
+    "Serum Creatinine (mg/dL)",
+    "Sodium (mEq/L)",
+    "Potassium (mEq/L)",
+    "Hemoglobin (g/dL)",
+    "White Blood Cell Count (cells/cumm)",
+    "Red Blood Cell Count (millions/cmm)",
+    "Target"
+    ]
+    #Map ckd/notckd in target column to 1/0 for positive and negative
+    
+    cdkd_file_path = os.path.join(script_dir, "Datasets", "ckd_dataset.csv")
+    ckd_data = pd.read_csv(cdkd_file_path, usecols=columns, na_values=['?'])
+    
+    print("\nMissing values before imputation:")
+    print(ckd_data.isnull().sum())
+    
+    # Clean up target values - map anything containing 'notckd' to 0, everything else to 1
+    print(f"\nOriginal Target counts:\n{ckd_data['Target'].value_counts()}")
+    ckd_data['Target'] = ckd_data['Target'].apply(lambda x: 0 if 'notckd' in str(x).lower() else 1)
+    print(f"Cleaned Target counts:\n{ckd_data['Target'].value_counts()}")
+    
+    # Handle missing values with SimpleImputer before train_test_split
+    imputer = SimpleImputer(strategy='median')
+    ckd_data[columns[:-1]] = imputer.fit_transform(ckd_data[columns[:-1]])
+    
+    categorical_features = []
+    numerical_features = columns[:-1]  # All except Target
+    
+    # Check for outliers (values beyond 3 standard deviations)
+    print("\nOutlier Detection (values beyond 3 std devs):")
+    for col in numerical_features:
+        mean = ckd_data[col].mean()
+        std = ckd_data[col].std()
+        outliers = ckd_data[
+            (ckd_data[col] < mean - 3*std) | 
+            (ckd_data[col] > mean + 3*std)
+        ]
+        if len(outliers) > 0:
+            print(f"\n{col}: {len(outliers)} outliers detected")
+    
+    '''
+    Test all the types of models, ensure accuracy before saving 
+    train_models(
+    ckd_data, 
+    categorical_features=categorical_features, 
+    numerical_features=numerical_features
+    )
+    
+    '''
+
+    
+    
+    #Training works with 0.975 accuracy for random forest classifier, save model
+    rf_ckd = train_random_forest_classifier(
+        ckd_data, 
+        categorical_features=categorical_features, 
+        numerical_features=numerical_features
+    )
+    output_dir = os.path.join(script_dir, "ML_Models")
+    os.makedirs(output_dir, exist_ok=True)
+    joblib.dump(rf_ckd, os.path.join(output_dir, 'ckd_rf_model.pkl'))
+    
 if __name__ == "__main__":
     main()
