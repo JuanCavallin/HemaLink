@@ -29,7 +29,7 @@ app.add_middleware(
 
 # load models
 script_dir = os.path.dirname(os.path.abspath(__file__))
-model_dir = os.path.join(script_dir, "..", "ML_Models")
+model_dir = os.path.join(script_dir, "ML_Models")
 
 def load_model(path):
     try:
@@ -48,21 +48,27 @@ ANEMIA_FEATURES = ["Gender", "Hemoglobin", "MCH", "MCHC", "MCV"]
 
 THYROID_FEATURES = ["sex", "age", "TSH", "T3", "TT4", "T4U", "FTI", "TBG"]
 
-DIABETES_NUM_FEATURES = [
-    'time_in_hospital', 'num_lab_procedures', 'num_procedures', 
-    'num_medications', 'number_outpatient', 'number_emergency', 
-    'number_inpatient', 'number_diagnoses'
+DIABETES_FEATURES = [
+    'Fasting_Blood_Glucose',
+    'HbA1c',
+    'Triglyceride_Levels',
+    'LDL_Cholesterol',
+    'HDL_Cholesterol',
+    'CRP_Levels',
+    'Insulin_Levels',
+    'HOMA_IR',
+    'OGTT',
+    'Creatinine_Levels',
+    'eGFR',
+    'Uric_Acid_Levels',
+    'Fructosamine_Levels',
+    'ALT',
+    'AST',
+    'C_Peptide',
+    'Proinsulin_Levels'
 ]
-# I put old markers here but change for new data
-DIABETES_CAT_FEATURES = [
-    'gender', 'age', 'max_glu_serum', 'A1Cresult', 'metformin', 'repaglinide', 
-    'nateglinide', 'chlorpropamide', 'glimepiride', 'acetohexamide', 'glipizide', 
-    'glyburide', 'tolbutamide', 'pioglitazone', 'rosiglitazone', 'acarbose', 
-    'miglitol', 'troglitazone', 'tolazamide', 'examide', 'citoglipton', 'insulin', 
-    'glyburide-metformin', 'glipizide-metformin', 'glimepiride-pioglitazone', 
-    'metformin-rosiglitazone', 'metformin-pioglitazone', 'change', 'diabetesMed'
-]
-DIABETES_FEATURES = DIABETES_NUM_FEATURES + DIABETES_CAT_FEATURES
+DIABETES_NUM_FEATURES = DIABETES_FEATURES
+DIABETES_CAT_FEATURES = []
 
 
 def get_prediction(model, model_name, features, data_dict):
