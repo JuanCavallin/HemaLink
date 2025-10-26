@@ -39,6 +39,12 @@
     ".next\\dev/types/**/*.ts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "components/Header.tsx",
+    "components/Hero.tsx",
+    "components/HowItWorks.tsx",
+    "components/BloodParticles.tsx",
+    "components/Navbar.tsx",
+    "components/AuthLinks.tsx"
   ]
 }

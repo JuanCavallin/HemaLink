@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #0a0000;
+  --foreground: #f5f5f5;
 }
 
 @theme inline {
@@ -14,13 +14,31 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #0a0000;
+    --foreground: #f5f5f5;
   }
 }
 
 body {
-  background: var(--background);
+  background: linear-gradient(180deg, #0a0000 0%, #1a0000 50%, #000000 100%);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Ensure the root elements share the same background and prevent white flashes on overscroll */
+html, body, #__next {
+  height: 100%;
+  min-height: 100%;
+  margin: 0;
+  background: linear-gradient(180deg, #0a0000 0%, #1a0000 50%, #000000 100%);
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-color: #0a0000; /* fallback */
+  overscroll-behavior-y: contain; /* reduce elastic white flash on some platforms */
+}
+
+/* subtle premium glow utility */
+.glow {
+  box-shadow: 0 0 30px rgba(255, 0, 60, 0.45);
 }
