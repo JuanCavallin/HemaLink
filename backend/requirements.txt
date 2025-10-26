@@ -1,0 +1,13 @@
+# Backend Python dependencies for HemaLink
+# Install with: pip install -r backend/requirements.txt
+fastapi
+uvicorn[standard]
+numpy
+opencv-python
+pytesseract
+python-multipart
+
+# Notes:
+# - `pytesseract` is a Python wrapper for the Tesseract OCR engine; you still need the
+#   Tesseract binary installed on the host (see README).
+# - Consider `opencv-python-headless` for server/container environments to avoid GUI deps.
