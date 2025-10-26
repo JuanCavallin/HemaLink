@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, DragEvent, ChangeEvent } from 'react';
-import { Upload, FileText, XCircle, Loader2, FileImage } from 'lucide-react';
+import { Upload, FileText, XCircle, Loader2, FileImage, FileType } from 'lucide-react';
 
 export default function DashboardPage() {
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
@@ -16,7 +16,8 @@ export default function DashboardPage() {
   const allowedTypes = [
     'text/plain',
     'image/png',
-    'image/jpeg' 
+    'image/jpeg',
+    'application/pdf'
   ];
 
   const handleFiles = (files: FileList | null) => {
@@ -35,7 +36,7 @@ export default function DashboardPage() {
     }
 
     if (hasError) {
-      setError('One or more files were rejected. Only .txt, .png, and .jpg files are supported.');
+      setError('One or more files were rejected. Only .txt, .png, .jpg, and .pdf files are supported.'); // Updated error message
     } else {
       setError(null);
     }
@@ -143,7 +144,7 @@ export default function DashboardPage() {
             ref={fileInputRef}
             onChange={handleFileChange}
             className="hidden"
-            accept="text/plain,image/png,image/jpeg"
+            accept="text/plain,image/png,image/jpeg,application/pdf"
             multiple
           />
 
@@ -171,7 +172,7 @@ export default function DashboardPage() {
               </h3>
               <p className="text-gray-400">Or click to browse files</p>
               <p className="mt-4 text-sm text-gray-500">
-                Supported: .txt, .png, .jpg, .jpeg
+                Supported: .txt, .png, .jpg, .jpeg, .pdf 
               </p>
             </>
           )}
@@ -199,6 +200,8 @@ export default function DashboardPage() {
                     {/* icon rendering */}
                     {file.type.startsWith('image/') ? (
                       <FileImage className="h-5 w-5 text-blue-400" />
+                    ) : file.type === 'application/pdf' ? (
+                      <FileType className="h-5 w-5 text-red-400" />
                     ) : (
                       <FileText className="h-5 w-5 text-green-400" />
                     )}

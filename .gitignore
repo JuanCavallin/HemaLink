@@ -46,3 +46,7 @@ next-env.d.ts
 # Python virtual environment
 .venv/
 venv/
+samples/real_sample1.pdf
+samples/real_sample2.pdf
+.gitignore
+samples/real_sample3.pdf
