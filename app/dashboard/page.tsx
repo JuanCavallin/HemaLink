@@ -11,6 +11,9 @@ export default function DashboardPage() {
   const [uploadError, setUploadError] = useState<string | null>(null); //fastAPI server errors
   const [uploadSuccess, setUploadSuccess] = useState<any>(null); //server success response
 
+  const [age, setAge] = useState<string>('');
+  const [sex, setSex] = useState<string>('');
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const allowedTypes = [
@@ -84,6 +87,10 @@ export default function DashboardPage() {
     const FASTAPI_URL = 'http://127.0.0.1:8000/uploadfiles/'; //back end server (may need to change)
 
     const formData = new FormData();
+
+    formData.append('age', age);
+    formData.append('sex', sex);
+
     uploadedFiles.forEach(file => {
       formData.append('files', file); 
     });
@@ -123,6 +130,39 @@ export default function DashboardPage() {
         <h2 className="mb-8 text-2xl text-center text-gray-400">
           For Auto Disease Ranking
         </h2>
+
+        <div className="mb-6 grid grid-cols-2 gap-4">
+          <div>
+            <label htmlFor="age" className="block text-sm font-medium text-gray-300 mb-1">
+              Age
+            </label>
+            <input
+              type="number"
+              id="age"
+              value={age}
+              onChange={(e) => setAge(e.target.value)}
+              className="w-full rounded-md border-gray-600 bg-gray-700 p-2 text-white focus:border-blue-500 focus:ring-blue-500"
+              placeholder="e.g., 35"
+              required
+            />
+          </div>
+          <div>
+            <label htmlFor="sex" className="block text-sm font-medium text-gray-300 mb-1">
+              Sex
+            </label>
+            <select
+              id="sex"
+              value={sex}
+              onChange={(e) => setSex(e.target.value)}
+              className="w-full rounded-md border-gray-600 bg-gray-700 p-2 text-white focus:border-blue-500 focus:ring-blue-500"
+              required
+            >
+              <option value="">Select...</option>
+              <option value="M">Male</option>
+              <option value="F">Female</option>
+            </select>
+          </div>
+        </div>
 
         {/* drag and drop file upload */}
         <div
@@ -225,7 +265,7 @@ export default function DashboardPage() {
             <div className="mt-6 text-center">
               <button
                 onClick={handleSubmit}
-                disabled={isUploading}
+                disabled={isUploading || fileCount === 0 || !age || !sex}
                 className="inline-flex items-center justify-center rounded-md bg-blue-600 px-6 py-3 text-lg font-semibold text-white shadow-sm transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isUploading ? (
