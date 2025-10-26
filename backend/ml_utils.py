@@ -24,6 +24,7 @@ def load_model(path):
 ANEMIA_MODEL = load_model(os.path.join(model_dir, "anemia_rf_model.pkl"))
 THYROID_MODEL = load_model(os.path.join(model_dir, "thyroid_rf_model.pkl"))
 DIABETES_MODEL = load_model(os.path.join(model_dir, "diabetes_rf_model.pkl")) 
+CKD_MODEL = load_model(os.path.join(model_dir, "ckd_rf_model.pkl"))
 
 ANEMIA_FEATURES = ["Gender", "Hemoglobin", "MCH", "MCHC", "MCV"]
 
@@ -34,6 +35,19 @@ DIABETES_FEATURES = [
     'HDL_Cholesterol', 'CRP_Levels', 'Insulin_Levels', 'HOMA_IR', 'OGTT',
     'Creatinine_Levels', 'eGFR', 'Uric_Acid_Levels', 'Fructosamine_Levels',
     'ALT', 'AST', 'C_Peptide', 'Proinsulin_Levels'
+]
+
+CKD_FEATURES = [
+    "Age",
+    "Blood Glucose Random (mg/dL)",
+    "Blood Urea (mg/dL)",
+    "Serum Creatinine (mg/dL)",
+    "Sodium (mEq/L)",
+    "Potassium (mEq/L)",
+    "Hemoglobin (g/dL)",
+    "White Blood Cell Count (cells/cumm)",
+    "Red Blood Cell Count (millions/cmm)",
+    "Target"
 ]
 
 def get_prediction(model, model_name, features, data_dict):
@@ -47,8 +61,25 @@ def get_prediction(model, model_name, features, data_dict):
     missing_features = []
     
     for model_feature in features:
-        # handling for gender and sex fields
+        #Updated version for handling gender and sex fields
+        #Anemia: 0 = male, 1 = female
+        #Other: sex = 0, 1 where 0 = female, 1 = male
         if model_feature == "Gender":
+            if data_dict.get('sex') == "M":
+                model_input_data[model_feature] = 0.0
+            else:
+                model_input_data[model_feature] = 0.0
+            continue
+        #For sex values are reversed: 1 = Male, 0 = Female
+        if model_feature == "sex":
+            if model_input_data.get('sex') == "M":
+                model_input_data[model_feature] = 1.0
+            else:
+                model_input_data[model_feature] = 0.0
+            continue
+        # handling for gender and sex fields
+        '''
+            if model_feature == "Gender":
             sex_value = data_dict.get('sex') or data_dict.get('Gender')
             
             if not sex_value or sex_value == "Not Found":
@@ -64,6 +95,8 @@ def get_prediction(model, model_name, features, data_dict):
                     logging.warning(f"[{model_name}] Unexpected sex value '{sex_value}', defaulting to Female (0)")
                     model_input_data[model_feature] = 0.0
             continue
+        '''
+
         
         if model_feature == "sex":
             sex_value = data_dict.get('sex') or data_dict.get('Gender')
@@ -134,9 +167,13 @@ def get_all_predictions(file_results: Dict[str, str]) -> Dict[str, str]:
     diabetes_pred = get_prediction(
         DIABETES_MODEL, "Diabetes", DIABETES_FEATURES, file_results
     )
+    cdK_pred = get_prediction(
+        CKD_MODEL, "CKD", CKD_FEATURES, file_results
+    )
 
     return {
         "Anemia": anemia_pred,
         "Thyroid": thyroid_pred,
-        "Diabetes": diabetes_pred
+        "Diabetes": diabetes_pred,
+        "CKD": cdK_pred
     }
