@@ -7,8 +7,8 @@ import numpy as np
 from pdf2image import convert_from_bytes
 import logging
 
-from . import ocr
-from . import ml_utils
+import ocr
+import ml_utils
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 

@@ -86,7 +86,7 @@ export default function DashboardPage() {
     setUploadError(null);
     setUploadSuccess(null); 
 
-    const FASTAPI_URL = 'http://127.0.0.1:8000/uploadfiles/';
+    const FASTAPI_URL = 'http://localhost:8000/uploadfiles/';
 
     const formData = new FormData();
 

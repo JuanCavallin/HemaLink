@@ -6,6 +6,11 @@ numpy
 opencv-python
 pytesseract
 python-multipart
+pdf2image
+pandas
+scikit-learn
+joblib
+Pillow
 
 # Notes:
 # - `pytesseract` is a Python wrapper for the Tesseract OCR engine; you still need the
