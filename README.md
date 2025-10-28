@@ -4,6 +4,8 @@
 Medical terms like *LDL, HDL, or triglycerides* can be confusing — HemaLink makes them simple.  
 Upload your blood test report and receive an overall health score, along with clear, personalized advice.
 
+![HemaLink Homepage Demo](public/hemalinkhomepage.gif)
+
 ---
 
 ## Features
