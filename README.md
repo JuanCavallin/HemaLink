@@ -27,11 +27,34 @@ Upload your blood test report and receive an overall health score, along with cl
 
 ---
 
-## Prerequisites
+## Installation
+
+We recommend using Docker for the simplest setup, but instructions for manual installation are provided below.
+
+### Quick Start (Recommended with Docker)
+
+This method uses Docker Compose to build and run both the FastAPI backend and Next.js frontend services with a single command.
+
+1.  **Prerequisites:** Ensure you have **Docker** and **Docker Compose** installed.
+2.  **Clone the Repo:**
+    ```bash
+    git clone [https://github.com/nrebolloso/hemalink.git](https://github.com/nrebolloso/hemalink.git)
+    cd hemalink
+    ```
+3.  **Run Application:**
+    ```bash
+    docker compose up --build
+    ```
+
+The application will be accessible at `http://localhost:3000`.
+
+---
+
+## Prerequisites (Manual Setup)
 
 - [Node.js](https://nodejs.org/) (v16 or v18+)
 - [Python 3.10+](https://www.python.org/downloads/)
-- [Tesseract OCR](https://tesseract-ocr.github.io/tessdoc/Installation.html)
+- [Tesseract OCR](https://tesseract-ocr.github.io/tessdoc/Installation.html) (Required for the backend to perform OCR)
 
 ### Tesseract Install Examples
 
@@ -41,14 +64,13 @@ Upload your blood test report and receive an overall health score, along with cl
 
 ---
 
-## Setup (Cross-Platform)
+## Manual Setup (For Development)
 
 1) Clone
 
 ```bash
-git clone https://github.com/nrebolloso/hemalink.git
-cd hemalink
-```
+git clone [https://github.com/nrebolloso/hemalink.git](https://github.com/nrebolloso/hemalink.git)
+cd hemalink```
 
 2) Frontend
 
