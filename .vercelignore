@@ -1,0 +1,10 @@
+# Ignore backend code (It's on Render)
+backend/
+
+requirements.txt
+
+Dockerfile
+docker-compose.yml
+
+.venv/
+venv/
