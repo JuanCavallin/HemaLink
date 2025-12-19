@@ -13,4 +13,4 @@ COPY . .
 
 # command to run the app. 
 # use 0.0.0.0 to make it accessible outside the container.
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

@@ -17,6 +17,8 @@ app = FastAPI()
 origins = [
     "http://localhost",
     "http://localhost:3000",
+    "https://hemalink.vercel.app",
+    "https://hemalink.vercel.app/"
 ]
 
 app.add_middleware(
