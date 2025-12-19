@@ -29,6 +29,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get("/")
+def home():
+    return {"message": "HemaLink Backend is Running!"}
+
 @app.post("/uploadfiles/")
 async def create_upload_files(
     files: List[UploadFile] = File(...),
