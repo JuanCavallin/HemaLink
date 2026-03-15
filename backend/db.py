@@ -15,29 +15,34 @@ from sqlalchemy.engine import Engine
 
 logger = logging.getLogger(__name__)
 
+MIGRATIONS = ["v1_initial_schema", "v2_data_layer"]
 
 # ---------------------------------------------------------------------------
-# Schema initialization
+# Schema initialization (migration runner)
 # ---------------------------------------------------------------------------
 
 def init_schema(engine: Engine) -> None:
-    """Run init_db.sql only if the schema does not already exist."""
-    with engine.connect() as conn:
-        result = conn.execute(text(
-            "SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'user');"
-        ))
-        already_exists = result.scalar()
-
-    if already_exists:
-        logger.info("Schema already exists, skipping initialization.")
-        return
-
-    sql_path = os.path.join(os.path.dirname(__file__), "init_db.sql")
-    with open(sql_path, "r") as f:
-        schema_sql = f.read()
+    """Apply all pending migrations in version order."""
     with engine.begin() as conn:
-        conn.execute(text(schema_sql))
-    logger.info("Schema initialized successfully.")
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS schema_migrations (
+                version    TEXT PRIMARY KEY,
+                applied_at TIMESTAMPTZ DEFAULT now()
+            )
+        """))
+        applied = {row[0] for row in conn.execute(text("SELECT version FROM schema_migrations"))}
+        for version in MIGRATIONS:
+            if version not in applied:
+                sql_path = os.path.join(os.path.dirname(__file__), "migrations", f"{version}.sql")
+                with open(sql_path, "r") as f:
+                    sql = f.read()
+                conn.execute(text(sql))
+                conn.execute(
+                    text("INSERT INTO schema_migrations (version) VALUES (:v)"),
+                    {"v": version},
+                )
+                logger.info("Applied migration: %s", version)
+    logger.info("Schema migrations up to date.")
 
 
 # ---------------------------------------------------------------------------
@@ -142,6 +147,60 @@ def insert_biomarkers(
             rows,
         )
     logger.info("Inserted %d biomarker rows for run %s", len(rows), run_id)
+
+
+def insert_disease_predictions(
+    engine: Engine,
+    run_id: int,
+    predictions: dict[str, dict],
+) -> None:
+    """
+    Insert one disease_predictions row per disease result for a run.
+
+    predictions shape: {"Anemia": {"label": "Positive", "confidence": 92.45}, ...}
+    confidence is None when the prediction could not be made.
+    """
+    rows = [
+        {
+            "run_id": run_id,
+            "disease_name": disease,
+            "label": pred.get("label", "Unknown"),
+            "confidence": pred.get("confidence"),
+        }
+        for disease, pred in predictions.items()
+    ]
+    if not rows:
+        return
+    with engine.begin() as conn:
+        conn.execute(
+            text("""
+                INSERT INTO disease_predictions (run_id, disease_name, label, confidence)
+                VALUES (:run_id, :disease_name, :label, :confidence)
+            """),
+            rows,
+        )
+    logger.info("Inserted %d disease prediction rows for run %d", len(rows), run_id)
+
+
+def delete_run(engine: Engine, clerk_user_id: str, run_id: int) -> bool:
+    """
+    Delete a blood_test run and all associated data owned by this user.
+    Returns True if a row was deleted, False if not found or not owned by this user.
+    """
+    with engine.begin() as conn:
+        conn.execute(
+            text("DELETE FROM biomarker_measurements WHERE run_id = :rid AND clerk_user_id = :cuid"),
+            {"rid": run_id, "cuid": clerk_user_id},
+        )
+        conn.execute(
+            text("DELETE FROM disease_predictions WHERE run_id = :rid"),
+            {"rid": run_id},
+        )
+        result = conn.execute(
+            text("DELETE FROM blood_test WHERE id = :rid AND clerk_user_id = :cuid"),
+            {"rid": run_id, "cuid": clerk_user_id},
+        )
+        return result.rowcount > 0
 
 
 # ---------------------------------------------------------------------------

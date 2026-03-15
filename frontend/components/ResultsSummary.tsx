@@ -3,25 +3,22 @@
 import React from "react";
 
 // Types based on backend response
-export type BackendPredictionString = string; // "Positive (Confidence: 83.12%)" | "Model not loaded" | "Prediction Error: ..."
+export type PredictionResult = {
+  label: string;         // "Positive" | "Negative" | "Not enough information" | "Model not loaded" | "Prediction Error"
+  confidence: number | null;
+  missing?: string;      // comma-separated missing feature names, only when label is "Not enough information"
+};
 
 export type FileResult = {
   raw_ocr_results: Record<string, string>;
-  predictions: Record<string, BackendPredictionString>;
+  predictions: Record<string, PredictionResult>;
 };
 
 export type UploadResponse = {
   message: string;
   results: Record<string, FileResult>;
+  run_id?: number;
 };
-
-function parsePrediction(pred?: BackendPredictionString) {
-  if (!pred) return { label: "Unknown", confidence: null as number | null };
-  const label = (/^Positive/i.test(pred) ? "Positive" : /^Negative/i.test(pred) ? "Negative" : /Model not loaded/i.test(pred) ? "Not Loaded" : /Prediction Error/i.test(pred) ? "Error" : "Unknown");
-  const confMatch = pred.match(/Confidence:\s*([0-9]+(?:\.[0-9]+)?)%/i);
-  const confidence = confMatch ? parseFloat(confMatch[1]) : null;
-  return { label, confidence };
-}
 
 const defaultDiseaseOrder = ["Anemia", "Thyroid", "Diabetes"];
 
@@ -45,7 +42,7 @@ function getTipsForDisease(disease: string): string[] {
       return [
         "A positive signal warrants immediate blood glucose and HbA1c verification with a healthcare provider.",
         "Focus on a low-glycemic index diet rich in fiber (whole grains, vegetables, legumes).",
-        "Incorporate regular physical activity, aiming for at least 150 minutes of moderate exercise weekly (CDC reccomended).",
+        "Incorporate regular physical activity, aiming for at least 150 minutes of moderate exercise weekly (CDC recommended).",
         "Monitor your carbohydrate intake and seek advice from a certified diabetes educator (CDE).",
       ];
     default:
@@ -93,19 +90,18 @@ function pickBiomarkers(raw: Record<string, string>, limit = 8) {
     "CRP Levels",
     "Creatinine Levels",
   ];
-  
+
   const uniqueBiomarkers: Record<string, [string, string]> = {};
   const entries = Object.entries(raw).filter(([, v]) => v && v !== "Not Found");
-  
+
   const genderEntry = entries.find(([k]) => k === 'Gender');
   const sexEntry = entries.find(([k]) => k === 'sex');
 
   if (genderEntry) {
     uniqueBiomarkers['Gender'] = genderEntry;
   } else if (sexEntry) {
-    uniqueBiomarkers['Gender'] = ['Gender', sexEntry[1]]; 
+    uniqueBiomarkers['Gender'] = ['Gender', sexEntry[1]];
   }
-
 
   for (const [k, v] of entries) {
     if (k !== 'sex' && k !== 'Gender') {
@@ -130,7 +126,7 @@ function pickBiomarkers(raw: Record<string, string>, limit = 8) {
       addedKeys.add(key);
     }
   }
-  
+
   return prioritized.slice(0, limit);
 }
 
@@ -144,14 +140,14 @@ export default function ResultsSummary({ data, diseaseOrder = defaultDiseaseOrde
         const predictions = fileResult.predictions || {};
         const diseases = (diseaseOrder.length ? diseaseOrder : Object.keys(predictions)).filter((d) => predictions[d] !== undefined);
         const biomarkers = pickBiomarkers(fileResult.raw_ocr_results);
-        
+
         const positiveDiseases = diseases
-          .map(d => ({ 
-            name: d, 
-            parsed: parsePrediction(predictions[d]),
-            tips: getTipsForDisease(d)
+          .map(d => ({
+            name: d,
+            pred: predictions[d],
+            tips: getTipsForDisease(d),
           }))
-          .filter(item => item.parsed.label === "Positive" && item.tips.length > 0);
+          .filter(item => item.pred?.label === "Positive" && item.tips.length > 0);
 
         return (
           <div key={filename} className="rounded-xl border border-gray-800 bg-gray-900 p-6 shadow">
@@ -162,29 +158,32 @@ export default function ResultsSummary({ data, diseaseOrder = defaultDiseaseOrde
 
             <div className="grid gap-4 sm:grid-cols-3">
               {diseases.map((d) => {
-                const parsed = parsePrediction(predictions[d]);
+                const pred = predictions[d] ?? { label: "Unknown", confidence: null };
                 return (
                   <div key={d} className="rounded-lg border border-gray-800 bg-gray-950 p-4">
                     <div className="flex items-center justify-between">
                       <div className="text-sm text-gray-300">{d}</div>
-                      <Pill tone={parsed.label === "Positive" ? "bad" : parsed.label === "Negative" ? "good" : "muted"}>{parsed.label}</Pill>
+                      <Pill tone={pred.label === "Positive" ? "bad" : pred.label === "Negative" ? "good" : "muted"}>{pred.label}</Pill>
                     </div>
-                    <div className="mt-2 text-2xl font-bold text-white">{parsed.confidence !== null ? `${parsed.confidence.toFixed(1)}%` : "—"}</div>
-                    <ConfidenceBar value={parsed.confidence} state={parsed.label} />
+                    <div className="mt-2 text-2xl font-bold text-white">
+                      {pred.confidence !== null && pred.confidence !== undefined ? `${pred.confidence.toFixed(1)}%` : "—"}
+                    </div>
+                    <ConfidenceBar value={pred.confidence} state={pred.label} />
                     <div className="mt-2 text-xs text-gray-400">Confidence</div>
                   </div>
                 );
               })}
             </div>
 
-            {/* tips section --- */}
             {positiveDiseases.length > 0 && (
               <div className="mt-8 border-t border-gray-800 pt-6">
                 <h5 className="mb-3 text-lg font-bold text-red-400">Actionable Insights & Next Steps</h5>
                 <div className="space-y-6">
                   {positiveDiseases.map(item => (
                     <div key={item.name} className="rounded-lg border border-red-800 bg-red-950/20 p-4">
-                      <h6 className="text-md font-semibold text-red-300 mb-3">{item.name} Signal Detected ({item.parsed.confidence?.toFixed(1)}% Confidence)</h6>
+                      <h6 className="text-md font-semibold text-red-300 mb-3">
+                        {item.name} Signal Detected ({item.pred.confidence?.toFixed(1)}% Confidence)
+                      </h6>
                       <ul className="list-disc ml-4 space-y-2 text-sm text-gray-200">
                         {item.tips.map((tip, index) => (
                           <li key={index} className="pl-1">{tip}</li>

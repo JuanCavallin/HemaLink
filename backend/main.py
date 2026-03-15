@@ -1,4 +1,4 @@
-from fastapi import FastAPI, File, UploadFile, Form, Depends, Query
+from fastapi import FastAPI, File, UploadFile, Form, Depends, Query, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List
 import uvicorn
@@ -9,6 +9,8 @@ import numpy as np
 from pdf2image import convert_from_bytes
 import logging
 import uuid
+from datetime import date as date_type
+from contextlib import asynccontextmanager
 
 import ocr
 import ml_utils
@@ -42,11 +44,11 @@ s3 = boto3.client("s3", region_name=os.getenv("AWS_REGION", "us-east-1"))
 # ---------------------------------------------------------------------------
 # App
 # ---------------------------------------------------------------------------
-from contextlib import asynccontextmanager
 
 @asynccontextmanager
 async def lifespan(app):
     db_helpers.init_schema(engine)
+    ml_utils.load_models_from_s3(s3, S3_BUCKET)
     yield
 
 app = FastAPI(lifespan=lifespan)
@@ -54,8 +56,6 @@ app = FastAPI(lifespan=lifespan)
 origins = [
     "http://localhost",
     "http://localhost:3000",
-    "https://hemalink.vercel.app",
-    "https://hemalink.vercel.app/"
 ]
 
 app.add_middleware(
@@ -70,10 +70,6 @@ app.add_middleware(
 # Upload endpoint
 # ---------------------------------------------------------------------------
 
-# ---------------------------------------------------------------------------
-# Upload endpoint
-# ---------------------------------------------------------------------------
-
 @app.get("/")
 def home():
     return {"message": "HemaLink Backend is Running!"}
@@ -83,6 +79,7 @@ async def create_upload_files(
     files: List[UploadFile] = File(...),
     age: str = Form(""),
     sex: str = Form(""),
+    test_date: str = Form(""),
     clerk_user_id: str = Depends(get_current_user),
 ):
     """
@@ -91,10 +88,19 @@ async def create_upload_files(
     """
     logging.info("--- Files Received by Python (user: %s) ---", clerk_user_id)
 
+    # Parse optional test date (ISO format YYYY-MM-DD sent by frontend)
+    report_date = None
+    if test_date:
+        try:
+            report_date = date_type.fromisoformat(test_date)
+        except ValueError:
+            logging.warning("Invalid test_date received: %s — ignoring", test_date)
+
     # Ensure the user row exists
     db_helpers.upsert_user(engine, clerk_user_id)
 
     extraction_results = {}
+    run_id = None
 
     for file in files:
         logging.info("Processing File: %s, Type: %s", file.filename, file.content_type)
@@ -157,8 +163,11 @@ async def create_upload_files(
                 disease_results=predictions,
                 s3_original_key=s3_original_key,
                 s3_ocr_key=s3_ocr_key,
+                report_date=report_date,
             )
-            db_helpers.insert_biomarkers(engine, run_id, clerk_user_id, file_results)
+            db_helpers.insert_biomarkers(engine, run_id, clerk_user_id, file_results,
+                                         measured_at=report_date)
+            db_helpers.insert_disease_predictions(engine, run_id, predictions)
             logging.info("Saved run %d to PostgreSQL", run_id)
         except Exception as e:
             logging.error("DB write failed: %s", e)
@@ -169,7 +178,27 @@ async def create_upload_files(
         }
 
     logging.info("----------------------------------")
-    return {"message": "Files processed successfully", "results": extraction_results}
+    return {
+        "message": "Files processed successfully",
+        "results": extraction_results,
+        "run_id": run_id,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Delete record endpoint
+# ---------------------------------------------------------------------------
+
+@app.delete("/records/{run_id}")
+async def delete_record(
+    run_id: int,
+    clerk_user_id: str = Depends(get_current_user),
+):
+    """Delete a blood_test run and all associated data for the authenticated user."""
+    deleted = db_helpers.delete_run(engine, clerk_user_id, run_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Record not found or access denied")
+    return {"message": "Record deleted", "run_id": run_id}
 
 
 # ---------------------------------------------------------------------------
@@ -207,7 +236,7 @@ async def analyze_user_data(clerk_user_id: str = Depends(get_current_user)):
 
 
 # ---------------------------------------------------------------------------
-# New Analysis endpoints
+# Analysis endpoints
 # ---------------------------------------------------------------------------
 
 @app.get("/analysis/biomarkers")

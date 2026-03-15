@@ -3,14 +3,19 @@
 import { useEffect, useMemo, useState } from 'react';
 import ResultsSummary, { UploadResponse } from '@/components/ResultsSummary';
 import Link from 'next/link';
+import { Trash2 } from 'lucide-react';
+import { useApi } from '@/lib/api';
 
-// Simple local storage keys
 const HISTORY_KEY = 'hemalink:resultsHistory';
 
 type HistoryItem = {
-  id: string; // ISO date string
-  createdAt: string; // ISO
-  label: string; // Filenames or custom title
+  id: string;
+  createdAt: string;
+  label: string;
+  age?: string;
+  sex?: string;
+  testDate?: string;   // ISO YYYY-MM-DD (the blood test date)
+  runId?: number;      // RDS blood_test.id for backend deletion
   payload: UploadResponse;
 };
 
@@ -27,17 +32,57 @@ function loadHistory(): HistoryItem[] {
   }
 }
 
+function formatDate(iso?: string): string {
+  if (!iso) return '—';
+  try {
+    return new Date(iso).toLocaleDateString();
+  } catch {
+    return iso;
+  }
+}
+
+function formatSex(sex?: string): string {
+  if (!sex) return '—';
+  if (sex === 'M') return 'Male';
+  if (sex === 'F') return 'Female';
+  return sex;
+}
+
 export default function SummaryPage() {
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const { apiFetch } = useApi();
 
   useEffect(() => {
     const h = loadHistory();
     setHistory(h);
-    if (h.length && !activeId) setActiveId(h[0].id); // most recent first
+    if (h.length && !activeId) setActiveId(h[0].id);
   }, []);
 
   const activeItem = useMemo(() => history.find((h) => h.id === activeId) || null, [history, activeId]);
+
+  async function deleteItem(item: HistoryItem) {
+    if (!confirm(`Delete "${item.label}"? This cannot be undone.`)) return;
+
+    // Remove from localStorage immediately
+    const updated = history.filter((h) => h.id !== item.id);
+    setHistory(updated);
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(HISTORY_KEY, JSON.stringify(updated));
+    }
+    if (activeId === item.id) {
+      setActiveId(updated[0]?.id ?? null);
+    }
+
+    // Delete from backend if we have a run_id
+    if (item.runId) {
+      try {
+        await apiFetch(`/records/${item.runId}`, { method: 'DELETE' });
+      } catch (e) {
+        console.warn('Backend deletion failed for run_id:', item.runId, e);
+      }
+    }
+  }
 
   return (
     <main className="flex min-h-screen flex-col items-center p-8 md:p-16 bg-[var(--background)] text-[var(--foreground)]">
@@ -56,36 +101,70 @@ export default function SummaryPage() {
           </div>
         ) : (
           <div className="grid gap-6 lg:grid-cols-[260px_1fr]">
-            {/* history list */}
+            {/* history sidebar */}
             <aside className="rounded-lg border border-gray-800 bg-gray-900 p-4">
               <h2 className="mb-3 text-sm font-semibold text-gray-400">History</h2>
               <div className="space-y-2">
                 {history.map((item) => (
-                  <button
-                    key={item.id}
-                    onClick={() => setActiveId(item.id)}
-                    className={`w-full rounded border px-3 py-2 text-left text-sm transition-colors ${
-                      activeId === item.id
-                        ? 'border-blue-500 bg-blue-950/40 text-white'
-                        : 'border-gray-800 bg-gray-950 text-gray-300 hover:border-gray-700'
-                    }`}
-                  >
-                    <div className="font-medium">{item.label}</div>
-                    <div className="text-[11px] text-gray-400">{new Date(item.createdAt).toLocaleString()}</div>
-                  </button>
+                  <div key={item.id} className="relative group">
+                    <button
+                      onClick={() => setActiveId(item.id)}
+                      className={`w-full rounded border px-3 py-2 text-left text-sm transition-colors pr-8 ${
+                        activeId === item.id
+                          ? 'border-blue-500 bg-blue-950/40 text-white'
+                          : 'border-gray-800 bg-gray-950 text-gray-300 hover:border-gray-700'
+                      }`}
+                    >
+                      <div className="font-medium truncate">{item.label}</div>
+                      <div className="text-[11px] text-gray-400">{new Date(item.createdAt).toLocaleString()}</div>
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); deleteItem(item); }}
+                      className="absolute top-2 right-2 text-gray-600 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
+                      aria-label={`Delete ${item.label}`}
+                      title="Delete record"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
                 ))}
               </div>
             </aside>
 
-            {/* active summary */}
+            {/* active result */}
             <section>
               {activeItem ? (
                 <div className="space-y-6">
                   <div>
                     <h2 className="text-xl font-semibold text-white">Summary: {activeItem.label}</h2>
-                    <div className="text-xs text-gray-400">Generated {new Date(activeItem.createdAt).toLocaleString()}</div>
+                    <div className="text-xs text-gray-400">Uploaded {new Date(activeItem.createdAt).toLocaleString()}</div>
                   </div>
+
+                  {/* User Information */}
+                  <div className="rounded-lg border border-gray-700 bg-gray-900 p-4">
+                    <h3 className="mb-3 text-sm font-semibold text-gray-400">User Information</h3>
+                    <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 text-sm">
+                      <div>
+                        <div className="text-xs text-gray-500 mb-1">Age</div>
+                        <div className="text-white font-medium">{activeItem.age || '—'}</div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-gray-500 mb-1">Sex</div>
+                        <div className="text-white font-medium">{formatSex(activeItem.sex)}</div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-gray-500 mb-1">Test Date</div>
+                        <div className="text-white font-medium">{formatDate(activeItem.testDate)}</div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-gray-500 mb-1">Upload Date</div>
+                        <div className="text-white font-medium">{new Date(activeItem.createdAt).toLocaleDateString()}</div>
+                      </div>
+                    </div>
+                  </div>
+
                   <ResultsSummary data={activeItem.payload} />
+
                   <details className="mt-4">
                     <summary className="cursor-pointer text-sm text-gray-400 hover:text-gray-200">Show raw response</summary>
                     <div className="mt-2 rounded-lg bg-gray-900 p-4 text-green-300 overflow-x-auto">

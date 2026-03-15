@@ -17,6 +17,7 @@ export default function DashboardPage() {
 
   const [age, setAge] = useState<string>('');
   const [sex, setSex] = useState<string>('');
+  const [testDate, setTestDate] = useState<string>(''); // DD-MM-YYYY display format
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -81,12 +82,33 @@ export default function DashboardPage() {
     fileInputRef.current?.click();
   };
 
+  function parseDDMMYYYY(input: string): string | null {
+    const match = input.match(/^(\d{2})-(\d{2})-(\d{4})$/);
+    if (!match) return null;
+    const [, dd, mm, yyyy] = match;
+    const d = new Date(`${yyyy}-${mm}-${dd}`);
+    if (isNaN(d.getTime())) return null;
+    return `${yyyy}-${mm}-${dd}`; // ISO for backend
+  }
+
   const handleSubmit = async () => {
     if (uploadedFiles.length === 0) return;
 
     setIsUploading(true);
     setUploadError(null);
-    setUploadSuccess(null); 
+    setUploadSuccess(null);
+
+    // Validate test date if provided
+    let isoTestDate = '';
+    if (testDate) {
+      const parsed = parseDDMMYYYY(testDate);
+      if (!parsed) {
+        setUploadError('Invalid test date. Please use DD-MM-YYYY format (e.g. 15-03-2026).');
+        setIsUploading(false);
+        return;
+      }
+      isoTestDate = parsed;
+    }
 
     const FASTAPI_URL = `${process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:8000'}/uploadfiles/`;
 
@@ -94,9 +116,10 @@ export default function DashboardPage() {
 
     formData.append('age', age);
     formData.append('sex', sex);
+    formData.append('test_date', isoTestDate);
 
     uploadedFiles.forEach(file => {
-      formData.append('files', file); 
+      formData.append('files', file);
     });
 
     try {
@@ -127,6 +150,10 @@ export default function DashboardPage() {
           id: now.toISOString(),
           createdAt: now.toISOString(),
           label,
+          age,
+          sex,
+          testDate: isoTestDate,
+          runId: result.run_id ?? null,
           payload: result,
         };
         const raw = typeof window !== 'undefined' ? window.localStorage.getItem(HISTORY_KEY) : null;
@@ -159,7 +186,7 @@ export default function DashboardPage() {
           For Fast, Preliminary Disease Risk Prediction
         </h2>
 
-        <div className="mb-6 grid grid-cols-2 gap-4">
+        <div className="mb-6 grid grid-cols-3 gap-4">
           <div>
             <label htmlFor="age" className="block text-sm font-medium text-gray-300 mb-1">
               Age
@@ -189,6 +216,20 @@ export default function DashboardPage() {
               <option value="M">Male</option>
               <option value="F">Female</option>
             </select>
+          </div>
+          <div>
+            <label htmlFor="testDate" className="block text-sm font-medium text-gray-300 mb-1">
+              Test Date
+            </label>
+            <input
+              type="text"
+              id="testDate"
+              value={testDate}
+              onChange={(e) => setTestDate(e.target.value)}
+              className="w-full rounded-md border-gray-600 bg-gray-700 p-2 text-white focus:border-blue-500 focus:ring-blue-500"
+              placeholder="DD-MM-YYYY"
+              maxLength={10}
+            />
           </div>
         </div>
 

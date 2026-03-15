@@ -52,11 +52,22 @@ export default function AnalysisPage() {
   const [summaryError, setSummaryError] = useState<string | null>(null);
 
   // -------------------------------------------------------------------------
-  // Load biomarker list + summary table on mount
+  // Load biomarker list + summary table on mount and whenever the page
+  // becomes visible again (e.g. after navigating back from summary/delete)
   // -------------------------------------------------------------------------
   useEffect(() => {
     loadBiomarkers();
     loadSummary();
+
+    function handleVisibilityChange() {
+      if (document.visibilityState === "visible") {
+        loadBiomarkers();
+        loadSummary();
+      }
+    }
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
   }, []);
 
   async function loadBiomarkers() {
