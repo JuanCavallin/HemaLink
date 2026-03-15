@@ -245,11 +245,22 @@ async def analyze_user_data(clerk_user_id: str = Depends(get_current_user)):
             if high is not None and current > high:
                 healthy = False
 
+        prev_healthy: bool | None = None
+        if prev is not None and (low is not None or high is not None):
+            prev_healthy = True
+            if low is not None and prev < low:
+                prev_healthy = False
+            if high is not None and prev > high:
+                prev_healthy = False
+
         values[code] = {
             "value": current,
             "range": range_str,
             "change": change,
             "healthy": healthy,
+            "prev_healthy": prev_healthy,
+            "low": low,
+            "high": high,
         }
 
     return {"message": "Analysis successful", "values": values, "graphs": {}}
