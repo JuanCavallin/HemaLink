@@ -250,6 +250,57 @@ def get_biomarker_history(
         ]
 
 
+def get_user_gender(engine: Engine, clerk_user_id: str) -> str | None:
+    """Return the most recently recorded sex for the user from blood_test."""
+    with engine.connect() as conn:
+        result = conn.execute(
+            text("""
+                SELECT blood_markers->>'sex'
+                FROM blood_test
+                WHERE clerk_user_id = :cuid
+                  AND blood_markers->>'sex' IS NOT NULL
+                  AND blood_markers->>'sex' NOT IN ('Not Found', '')
+                ORDER BY test_time DESC
+                LIMIT 1
+            """),
+            {"cuid": clerk_user_id},
+        )
+        row = result.fetchone()
+    return row[0] if row else None
+
+
+def get_reference_ranges(engine: Engine, gender: str | None = None) -> dict[str, dict]:
+    """
+    Return all clinical reference ranges keyed by biomarker_code.
+    Gender-specific rows ('M' or 'F') take precedence over universal (NULL gender)
+    when a gender is supplied.
+    """
+    with engine.connect() as conn:
+        result = conn.execute(
+            text("""
+                SELECT biomarker_code, display_name, unit, low, high, gender
+                FROM biomarker_reference_ranges
+                ORDER BY biomarker_code, gender NULLS LAST
+            """)
+        )
+        rows = result.fetchall()
+
+    out: dict[str, dict] = {}
+    for code, display_name, unit, low, high, g in rows:
+        entry = {
+            "display_name": display_name,
+            "unit": unit or "",
+            "low": float(low) if low is not None else None,
+            "high": float(high) if high is not None else None,
+        }
+        if code not in out:
+            out[code] = entry
+        elif gender and g == gender:
+            # gender-specific row overrides a universal row already stored
+            out[code] = entry
+    return out
+
+
 def get_latest_values(engine: Engine, clerk_user_id: str) -> dict[str, dict]:
     """
     For each biomarker, return the latest value and the previous value

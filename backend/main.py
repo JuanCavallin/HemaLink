@@ -207,15 +207,14 @@ async def delete_record(
 
 @app.get("/analyzeuserdata")
 async def analyze_user_data(clerk_user_id: str = Depends(get_current_user)):
-    """Returns latest biomarker values + delta vs previous run for the Analysis table."""
+    """Returns latest biomarker values + healthy range status for the Analysis table."""
     latest = db_helpers.get_latest_values(engine, clerk_user_id)
 
     if not latest:
-        return {
-            "message": "No data yet",
-            "values": {},
-            "graphs": {},
-        }
+        return {"message": "No data yet", "values": {}, "graphs": {}}
+
+    gender = db_helpers.get_user_gender(engine, clerk_user_id)
+    ref_ranges = db_helpers.get_reference_ranges(engine, gender)
 
     values = {}
     for code, info in latest.items():
@@ -225,14 +224,44 @@ async def analyze_user_data(clerk_user_id: str = Depends(get_current_user)):
         if current is not None and prev is not None and prev != 0:
             change = round(((current - prev) / prev) * 100, 1)
 
+        ref = ref_ranges.get(code, {})
+        low = ref.get("low")
+        high = ref.get("high")
+        unit = ref.get("unit", info.get("unit", ""))
+
+        if low is not None and high is not None:
+            range_str = f"{low}–{high} {unit}".strip()
+        elif low is not None:
+            range_str = f">{low} {unit}".strip()
+        elif high is not None:
+            range_str = f"<{high} {unit}".strip()
+        else:
+            range_str = ""
+
+        healthy = True
+        if current is not None and (low is not None or high is not None):
+            if low is not None and current < low:
+                healthy = False
+            if high is not None and current > high:
+                healthy = False
+
         values[code] = {
             "value": current,
-            "range": "",
+            "range": range_str,
             "change": change,
-            "healthy": True,
+            "healthy": healthy,
         }
 
     return {"message": "Analysis successful", "values": values, "graphs": {}}
+
+
+@app.get("/reference-ranges")
+async def reference_ranges_endpoint(
+    sex: str = Query("", description="'M' or 'F'"),
+    _auth: str = Depends(get_current_user),
+):
+    """Returns all clinical reference ranges, gender-specific rows take precedence when sex is provided."""
+    return db_helpers.get_reference_ranges(engine, sex or None)
 
 
 # ---------------------------------------------------------------------------

@@ -139,7 +139,7 @@ def get_prediction(model, model_name, features, data_dict) -> dict:
         prediction_label = "Positive" if prediction[0] == 1 else "Negative"
         confidence = prediction_proba[0][prediction[0]]
 
-        return {"label": prediction_label, "confidence": round(confidence * 100, 2)}
+        return {"label": prediction_label, "confidence": float(round(confidence * 100, 2))}
 
     except Exception as e:
         logging.error(f"[{model_name}] model prediction failed: {e}")

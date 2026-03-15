@@ -9,7 +9,7 @@ pytesseract
 python-multipart
 pdf2image
 pandas
-scikit-learn
+scikit-learn==1.7.2
 joblib
 Pillow
 sqlalchemy

@@ -20,6 +20,13 @@ export type UploadResponse = {
   run_id?: number;
 };
 
+export type ReferenceRange = {
+  low: number | null;
+  high: number | null;
+  unit: string;
+  display_name: string;
+};
+
 const defaultDiseaseOrder = ["Anemia", "Thyroid", "Diabetes"];
 
 function getTipsForDisease(disease: string): string[] {
@@ -76,47 +83,35 @@ function prettyKey(key: string) {
 
 function pickBiomarkers(raw: Record<string, string>, limit = 8) {
   const priority = [
-    "Gender",
     "Hemoglobin",
-    "White blood cells",
-    "Red blood cells",
-    "Hematocrit",
     "MCV",
     "MCH",
     "MCHC",
-    "LDL",
-    "HDL",
-    "Triglycerides",
-    "CRP Levels",
-    "Creatinine Levels",
+    "LDL_Cholesterol",
+    "HDL_Cholesterol",
+    "Triglyceride_Levels",
+    "Fasting_Blood_Glucose",
+    "HbA1c",
+    "TSH",
+    "Creatinine_Levels",
+    "CRP_Levels",
   ];
 
   const uniqueBiomarkers: Record<string, [string, string]> = {};
-  const entries = Object.entries(raw).filter(([, v]) => v && v !== "Not Found");
-
-  const genderEntry = entries.find(([k]) => k === 'Gender');
-  const sexEntry = entries.find(([k]) => k === 'sex');
-
-  if (genderEntry) {
-    uniqueBiomarkers['Gender'] = genderEntry;
-  } else if (sexEntry) {
-    uniqueBiomarkers['Gender'] = ['Gender', sexEntry[1]];
-  }
+  const HIDE_KEYS = new Set(["gender", "sex", "age"]);
+  const entries = Object.entries(raw).filter(([k, v]) => v && v !== "Not Found" && !HIDE_KEYS.has(k.toLowerCase()));
 
   for (const [k, v] of entries) {
-    if (k !== 'sex' && k !== 'Gender') {
-      uniqueBiomarkers[k] = [k, v];
-    }
+    uniqueBiomarkers[k] = [k, v];
   }
 
   const prioritized: Array<[string, string]> = [];
   const addedKeys = new Set<string>();
 
   for (const p of priority) {
-    const canonicalKey = p === "sex" ? "Gender" : p;
-    if (uniqueBiomarkers[canonicalKey] && !addedKeys.has(canonicalKey)) {
-      prioritized.push(uniqueBiomarkers[canonicalKey]);
-      addedKeys.add(canonicalKey);
+    if (uniqueBiomarkers[p] && !addedKeys.has(p)) {
+      prioritized.push(uniqueBiomarkers[p]);
+      addedKeys.add(p);
     }
   }
 
@@ -130,7 +125,15 @@ function pickBiomarkers(raw: Record<string, string>, limit = 8) {
   return prioritized.slice(0, limit);
 }
 
-export default function ResultsSummary({ data, diseaseOrder = defaultDiseaseOrder }: { data: UploadResponse; diseaseOrder?: string[] }) {
+export default function ResultsSummary({
+  data,
+  diseaseOrder = defaultDiseaseOrder,
+  referenceRanges = {},
+}: {
+  data: UploadResponse;
+  diseaseOrder?: string[];
+  referenceRanges?: Record<string, ReferenceRange>;
+}) {
   const files = Object.entries(data?.results ?? {});
   if (!files.length) return null;
 
@@ -199,12 +202,23 @@ export default function ResultsSummary({ data, diseaseOrder = defaultDiseaseOrde
               <h5 className="mb-2 text-sm font-medium text-gray-300">Key biomarkers</h5>
               {biomarkers.length ? (
                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                  {biomarkers.map(([k, v]) => (
-                    <div key={k} className="flex items-center justify-between rounded border border-gray-800 bg-gray-950 px-3 py-2">
-                      <span className="text-gray-300">{prettyKey(k)}</span>
-                      <span className="font-medium text-white">{v}</span>
-                    </div>
-                  ))}
+                  {biomarkers.map(([k, v]) => {
+                    const ref = referenceRanges[k];
+                    const num = ref ? parseFloat(v) : NaN;
+                    let valueColor = "text-white";
+                    if (ref && !isNaN(num)) {
+                      const outOfRange =
+                        (ref.low !== null && num < ref.low) ||
+                        (ref.high !== null && num > ref.high);
+                      valueColor = outOfRange ? "text-red-400" : "text-green-400";
+                    }
+                    return (
+                      <div key={k} className="flex items-center justify-between rounded border border-gray-800 bg-gray-950 px-3 py-2">
+                        <span className="text-gray-300">{prettyKey(k)}</span>
+                        <span className={`font-medium ${valueColor}`}>{v}</span>
+                      </div>
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="rounded border border-gray-800 bg-gray-950 p-3 text-sm text-gray-400">No biomarkers extracted.</div>

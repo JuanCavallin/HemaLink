@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import ResultsSummary, { UploadResponse } from '@/components/ResultsSummary';
+import ResultsSummary, { UploadResponse, ReferenceRange } from '@/components/ResultsSummary';
 import Link from 'next/link';
 import { Trash2 } from 'lucide-react';
 import { useApi } from '@/lib/api';
@@ -51,6 +51,7 @@ function formatSex(sex?: string): string {
 export default function SummaryPage() {
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [referenceRanges, setReferenceRanges] = useState<Record<string, ReferenceRange>>({});
   const { apiFetch } = useApi();
 
   useEffect(() => {
@@ -60,6 +61,14 @@ export default function SummaryPage() {
   }, []);
 
   const activeItem = useMemo(() => history.find((h) => h.id === activeId) || null, [history, activeId]);
+
+  useEffect(() => {
+    const sex = activeItem?.sex ?? '';
+    apiFetch(`/reference-ranges?sex=${encodeURIComponent(sex)}`)
+      .then((r) => (r.ok ? r.json() : {}))
+      .then(setReferenceRanges)
+      .catch(() => {});
+  }, [activeItem?.sex]);
 
   async function deleteItem(item: HistoryItem) {
     if (!confirm(`Delete "${item.label}"? This cannot be undone.`)) return;
@@ -163,7 +172,7 @@ export default function SummaryPage() {
                     </div>
                   </div>
 
-                  <ResultsSummary data={activeItem.payload} />
+                  <ResultsSummary data={activeItem.payload} referenceRanges={referenceRanges} />
 
                   <details className="mt-4">
                     <summary className="cursor-pointer text-sm text-gray-400 hover:text-gray-200">Show raw response</summary>
