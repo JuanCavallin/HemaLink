@@ -44,14 +44,14 @@ export default function SummaryPage() {
       <div className="w-full max-w-6xl">
         <div className="mb-6 flex items-center justify-between">
           <h1 className="text-3xl font-bold">Your Results</h1>
-          <Link href="/dashboard" className="text-sm text-blue-400 hover:text-blue-300">Upload New</Link>
+          <Link href="/upload" className="text-sm text-blue-400 hover:text-blue-300">Upload New</Link>
         </div>
 
         {history.length === 0 ? (
           <div className="rounded-xl border border-gray-800 bg-gray-900 p-8 text-center">
             <p className="text-gray-300">No results yet. Upload a report to see your summary here.</p>
             <div className="mt-4">
-              <Link href="/dashboard" className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">Go to Dashboard</Link>
+              <Link href="/upload" className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">Go to Upload</Link>
             </div>
           </div>
         ) : (

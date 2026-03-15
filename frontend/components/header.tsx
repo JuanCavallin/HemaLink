@@ -26,14 +26,14 @@ export default function Header() {
                         </Link>*/}
 
                         <SignedIn>
-                            <Link href="/dashboard" className="text-sm text-white/85 hover:text-red-400">
+                            <Link href="/upload" className="text-sm text-white/85 hover:text-red-400">
                                 Upload
-                            </Link>
-                            <Link href="/summary" className="text-sm text-white/85 hover:text-red-400">
-                                Summary
                             </Link>
                             <Link href="/analysis" className="text-sm text-white/85 hover:text-red-400">
                                 Analysis
+                            </Link>
+                            <Link href="/summary" className="text-sm text-white/85 hover:text-red-400">
+                                History
                             </Link>
                         </SignedIn>
                     </nav>
