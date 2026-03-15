@@ -1,24 +1,30 @@
-version: '3.8'
-
 services:
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
     ports:
-      - "8000:8000"
+      - "${BACKEND_PORT:-8000}:8000"
     volumes:
       - ./backend:/app
-    
+    env_file:
+      - .env
+      - backend/.env
+    extra_hosts:
+      - "host.docker.internal:host-gateway"   # Linux compatibility for host DB access
+
   frontend:
     build:
-      context: .
+      context: ./frontend
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"
+      - "${FRONTEND_PORT:-3000}:3000"
     volumes:
-      - .:/app
+      - ./frontend:/app
       - /app/node_modules
       - /app/.next
+    env_file:
+      - .env
+      - frontend/.env
     depends_on:
       - backend

@@ -3,9 +3,11 @@
 import { useState, useRef, DragEvent, ChangeEvent } from 'react';
 import { Upload, FileText, XCircle, Loader2, FileImage, FileType } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@clerk/nextjs';
 
 export default function DashboardPage() {
   const router = useRouter();
+  const { getToken } = useAuth();
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [error, setError] = useState<string | null>(null); //local file type and size validation
   
@@ -86,8 +88,7 @@ export default function DashboardPage() {
     setUploadError(null);
     setUploadSuccess(null); 
 
-    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-    const FASTAPI_URL = `${API_BASE_URL}/uploadfiles/`;
+    const FASTAPI_URL = `${process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:8000'}/uploadfiles/`;
 
     const formData = new FormData();
 
@@ -99,9 +100,11 @@ export default function DashboardPage() {
     });
 
     try {
+      const token = await getToken();
       const response = await fetch(FASTAPI_URL, {
         method: 'POST',
         body: formData,
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
 
       const result = await response.json();
@@ -153,7 +156,7 @@ export default function DashboardPage() {
           Upload Your Lab Test Results
         </h1>
         <h2 className="mb-8 text-2xl text-center text-gray-400">
-          For Auto Disease Ranking
+          For Fast, Preliminary Disease Risk Prediction
         </h2>
 
         <div className="mb-6 grid grid-cols-2 gap-4">

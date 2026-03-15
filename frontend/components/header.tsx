@@ -18,18 +18,22 @@ export default function Header() {
                         <Link href="/#home" className="text-sm text-white/85 hover:text-red-400">
                             Home
                         </Link>
-                        <Link href="/#about" className="text-sm text-white/85 hover:text-red-400">
+                        {/* <Link href="/#about" className="text-sm text-white/85 hover:text-red-400">
                             About
                         </Link>
                         <Link href="/#how-it-works" className="text-sm text-white/85 hover:text-red-400">
                             How it works
-                        </Link>
+                        </Link>*/}
+
                         <SignedIn>
                             <Link href="/dashboard" className="text-sm text-white/85 hover:text-red-400">
-                                Dashboard
+                                Upload
                             </Link>
                             <Link href="/summary" className="text-sm text-white/85 hover:text-red-400">
                                 Summary
+                            </Link>
+                            <Link href="/analysis" className="text-sm text-white/85 hover:text-red-400">
+                                Analysis
                             </Link>
                         </SignedIn>
                     </nav>
