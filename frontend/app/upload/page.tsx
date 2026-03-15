@@ -82,10 +82,10 @@ export default function DashboardPage() {
     fileInputRef.current?.click();
   };
 
-  function parseDDMMYYYY(input: string): string | null {
+  function parseMMDDYYYY(input: string): string | null {
     const match = input.match(/^(\d{2})-(\d{2})-(\d{4})$/);
     if (!match) return null;
-    const [, dd, mm, yyyy] = match;
+    const [, mm, dd, yyyy] = match;
     const d = new Date(`${yyyy}-${mm}-${dd}`);
     if (isNaN(d.getTime())) return null;
     return `${yyyy}-${mm}-${dd}`; // ISO for backend
@@ -101,9 +101,9 @@ export default function DashboardPage() {
     // Validate test date if provided
     let isoTestDate = '';
     if (testDate) {
-      const parsed = parseDDMMYYYY(testDate);
+      const parsed = parseMMDDYYYY(testDate);
       if (!parsed) {
-        setUploadError('Invalid test date. Please use DD-MM-YYYY format (e.g. 15-03-2026).');
+        setUploadError('Invalid test date. Please use MM-DD-YYYY format (e.g. 03-15-2026).');
         setIsUploading(false);
         return;
       }
@@ -227,7 +227,7 @@ export default function DashboardPage() {
               value={testDate}
               onChange={(e) => setTestDate(e.target.value)}
               className="w-full rounded-md border-gray-600 bg-gray-700 p-2 text-white focus:border-blue-500 focus:ring-blue-500"
-              placeholder="DD-MM-YYYY"
+              placeholder="MM-DD-YYYY"
               maxLength={10}
             />
           </div>
