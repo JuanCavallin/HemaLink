@@ -279,6 +279,12 @@ async def reference_ranges_endpoint(
 # Analysis endpoints
 # ---------------------------------------------------------------------------
 
+@app.get("/analysis/disease-history")
+async def disease_history_endpoint(clerk_user_id: str = Depends(get_current_user)):
+    """Returns per-disease prediction timeseries for the authenticated user."""
+    return db_helpers.get_disease_history(engine, clerk_user_id)
+
+
 @app.get("/analysis/biomarkers")
 async def list_biomarkers(clerk_user_id: str = Depends(get_current_user)):
     """List all biomarker codes that have data for the authenticated user."""

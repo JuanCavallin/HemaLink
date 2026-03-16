@@ -250,6 +250,42 @@ def get_biomarker_history(
         ]
 
 
+def get_disease_history(engine: Engine, clerk_user_id: str) -> dict[str, list[dict]]:
+    """
+    Returns per-disease prediction timeseries for the user, oldest first.
+    Date used: report_date if present, else test_time::date.
+
+    Return shape:
+        {"Anemia": [{"date": "YYYY-MM-DD", "label": str, "confidence": float|None}], ...}
+    """
+    with engine.connect() as conn:
+        result = conn.execute(
+            text("""
+                SELECT dp.disease_name,
+                       dp.label,
+                       dp.confidence,
+                       COALESCE(bt.report_date, bt.test_time::date) AS measured_date
+                FROM disease_predictions dp
+                JOIN blood_test bt ON dp.run_id = bt.id
+                WHERE bt.clerk_user_id = :cuid
+                ORDER BY dp.disease_name, measured_date ASC
+            """),
+            {"cuid": clerk_user_id},
+        )
+        rows = result.fetchall()
+
+    out: dict[str, list[dict]] = {}
+    for disease_name, label, confidence, measured_date in rows:
+        if disease_name not in out:
+            out[disease_name] = []
+        out[disease_name].append({
+            "date": str(measured_date),
+            "label": label,
+            "confidence": float(confidence) if confidence is not None else None,
+        })
+    return out
+
+
 def get_user_gender(engine: Engine, clerk_user_id: str) -> str | None:
     """Return the most recently recorded sex for the user from blood_test."""
     with engine.connect() as conn:

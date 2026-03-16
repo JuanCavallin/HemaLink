@@ -29,7 +29,7 @@ export type ReferenceRange = {
 
 const defaultDiseaseOrder = ["Anemia", "Thyroid", "Diabetes"];
 
-function getTipsForDisease(disease: string): string[] {
+export function getTipsForDisease(disease: string): string[] {
   switch (disease.toLowerCase()) {
     case "anemia":
       return [

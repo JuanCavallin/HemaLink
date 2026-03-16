@@ -7,7 +7,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "./ui/card";
 const steps = [
 	{
 		title: "Upload Results",
-		desc: "Securely upload lab reports or copy/paste values.",
+		desc: "Securely upload lab reports or copy/paste values.\n",
 		icon: UploadCloud,
 	},
 	{
