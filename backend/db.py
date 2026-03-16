@@ -15,7 +15,7 @@ from sqlalchemy.engine import Engine
 
 logger = logging.getLogger(__name__)
 
-MIGRATIONS = ["v1_initial_schema", "v2_data_layer"]
+MIGRATIONS = ["v1_initial_schema", "v2_data_layer", "v3_add_label"]
 
 # ---------------------------------------------------------------------------
 # Schema initialization (migration runner)
@@ -72,6 +72,7 @@ def insert_run(
     s3_original_key: str,
     s3_ocr_key: str,
     report_date: date | None = None,
+    label: str | None = None,
 ) -> int:
     """Insert a blood_test row and return its id."""
     with engine.begin() as conn:
@@ -80,9 +81,9 @@ def insert_run(
                 """
                 INSERT INTO blood_test
                     (clerk_user_id, blood_markers, disease_results,
-                     s3_original_key, s3_ocr_key, report_date)
+                     s3_original_key, s3_ocr_key, report_date, label)
                 VALUES
-                    (:cuid, CAST(:bm AS JSON), CAST(:dr AS JSON), :s3_orig, :s3_ocr, :rdate)
+                    (:cuid, CAST(:bm AS JSON), CAST(:dr AS JSON), :s3_orig, :s3_ocr, :rdate, :label)
                 RETURNING id
                 """
             ),
@@ -93,6 +94,7 @@ def insert_run(
                 "s3_orig": s3_original_key,
                 "s3_ocr": s3_ocr_key,
                 "rdate": report_date,
+                "label": label,
             },
         )
         return result.scalar_one()
@@ -386,3 +388,61 @@ def get_latest_values(engine: Engine, clerk_user_id: str) -> dict[str, dict]:
             out[code]["prev"] = float(val)
 
     return out
+
+
+SKIP_HISTORY_KEYS = {"age", "sex", "gender", "filename"}
+
+
+def get_user_history(engine: Engine, clerk_user_id: str) -> list[dict]:
+    """
+    Return all blood test runs for the user as HistoryItem-compatible dicts,
+    newest first. Reconstructs the UploadResponse payload shape expected by
+    the frontend summary page.
+    """
+    with engine.connect() as conn:
+        result = conn.execute(
+            text("""
+                SELECT id, test_time, report_date, label, blood_markers, disease_results
+                FROM blood_test
+                WHERE clerk_user_id = :cuid
+                ORDER BY test_time DESC
+            """),
+            {"cuid": clerk_user_id},
+        )
+        rows = result.fetchall()
+
+    items = []
+    for row in rows:
+        run_id, test_time, report_date, label, blood_markers, disease_results = row
+
+        bm = blood_markers if isinstance(blood_markers, dict) else json.loads(blood_markers or "{}")
+        dr = disease_results if isinstance(disease_results, dict) else json.loads(disease_results or "{}")
+
+        display_label = label or f"Result {run_id}"
+
+        # Strip metadata keys from raw_ocr_results so the frontend sees only biomarker values
+        raw_ocr = {k: v for k, v in bm.items() if k.lower() not in SKIP_HISTORY_KEYS}
+
+        payload = {
+            "message": "Loaded from history",
+            "run_id": run_id,
+            "results": {
+                display_label: {
+                    "raw_ocr_results": raw_ocr,
+                    "predictions": dr,
+                }
+            },
+        }
+
+        items.append({
+            "id": str(run_id),
+            "createdAt": test_time.isoformat() if test_time else "",
+            "label": display_label,
+            "age": bm.get("age"),
+            "sex": bm.get("sex"),
+            "testDate": report_date.isoformat() if report_date else None,
+            "runId": run_id,
+            "payload": payload,
+        })
+
+    return items

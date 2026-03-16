@@ -155,6 +155,7 @@ async def create_upload_files(
         # ----------------------------------------------------------------
         # Persist to PostgreSQL
         # ----------------------------------------------------------------
+        file_label = ", ".join(f.filename for f in files if f.filename) or file.filename
         try:
             run_id = db_helpers.insert_run(
                 engine,
@@ -164,6 +165,7 @@ async def create_upload_files(
                 s3_original_key=s3_original_key,
                 s3_ocr_key=s3_ocr_key,
                 report_date=report_date,
+                label=file_label,
             )
             db_helpers.insert_biomarkers(engine, run_id, clerk_user_id, file_results,
                                          measured_at=report_date)
@@ -264,6 +266,12 @@ async def analyze_user_data(clerk_user_id: str = Depends(get_current_user)):
         }
 
     return {"message": "Analysis successful", "values": values, "graphs": {}}
+
+
+@app.get("/history")
+async def get_history(clerk_user_id: str = Depends(get_current_user)):
+    """Returns all blood test runs for the authenticated user as HistoryItem-compatible dicts."""
+    return db_helpers.get_user_history(engine, clerk_user_id)
 
 
 @app.get("/reference-ranges")

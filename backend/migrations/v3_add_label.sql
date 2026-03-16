@@ -1,0 +1,1 @@
+ALTER TABLE blood_test ADD COLUMN IF NOT EXISTS label TEXT;

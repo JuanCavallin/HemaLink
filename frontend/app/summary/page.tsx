@@ -53,12 +53,32 @@ export default function SummaryPage() {
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [referenceRanges, setReferenceRanges] = useState<Record<string, ReferenceRange>>({});
+  const [serverLoading, setServerLoading] = useState(false);
   const { apiFetch } = useApi();
 
+  function loadFromServer() {
+    setServerLoading(true);
+    apiFetch('/history')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data: HistoryItem[] | null) => {
+        if (data && Array.isArray(data)) {
+          setHistory(data);
+          if (typeof window !== 'undefined') {
+            window.localStorage.setItem(HISTORY_KEY, JSON.stringify(data));
+          }
+          setActiveId((prev) => prev ?? (data[0]?.id ?? null));
+        }
+      })
+      .catch(() => {})
+      .finally(() => setServerLoading(false));
+  }
+
   useEffect(() => {
+    // Show cached results immediately, then refresh from backend
     const h = loadHistory();
     setHistory(h);
     if (h.length && !activeId) setActiveId(h[0].id);
+    loadFromServer();
   }, []);
 
   const activeItem = useMemo(() => history.find((h) => h.id === activeId) || null, [history, activeId]);
@@ -113,7 +133,10 @@ export default function SummaryPage() {
           <div className="grid gap-6 lg:grid-cols-[260px_1fr]">
             {/* history sidebar */}
             <aside className={`${CARD} p-4`}>
-              <h2 className="mb-3 text-sm font-semibold text-gray-400">History</h2>
+              <div className="mb-3 flex items-center justify-between">
+                <h2 className="text-sm font-semibold text-gray-400">History</h2>
+                {serverLoading && <span className="text-xs text-gray-500 animate-pulse">Syncing…</span>}
+              </div>
               <div className="space-y-2">
                 {history.map((item) => (
                   <div key={item.id} className="relative group">

@@ -2,9 +2,9 @@
 -- Full current database schema for HemaLink (read-only reference).
 -- This file is NOT executed by the application. Migrations in ../migrations/
 -- are the source of truth. This file reflects the state after all migrations
--- through v2_data_layer have been applied.
+-- through v3_add_label have been applied.
 --
--- Last updated: v2_data_layer
+-- Last updated: v3_add_label
 -- -------------------------------------------------------------------------
 
 
@@ -44,7 +44,8 @@ CREATE TABLE IF NOT EXISTS blood_test (
     test_time       TIMESTAMPTZ DEFAULT now(),  -- upload timestamp
     s3_original_key TEXT,          -- S3 path to original uploaded file
     s3_ocr_key      TEXT,          -- S3 path to extracted OCR text
-    report_date     DATE           -- date printed on the blood test report (user-supplied)
+    report_date     DATE,          -- date printed on the blood test report (user-supplied)
+    label           TEXT           -- human-readable filename(s) shown in the summary sidebar
 );
 
 
