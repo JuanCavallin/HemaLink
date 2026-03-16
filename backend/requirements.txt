@@ -17,6 +17,7 @@ psycopg2-binary
 boto3
 PyJWT[crypto]
 requests
+ucimlrepo
 
 # Notes:
 # - `pytesseract` is a Python wrapper for the Tesseract OCR engine; you still need the
