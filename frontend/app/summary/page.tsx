@@ -5,7 +5,7 @@ import ResultsSummary, { UploadResponse, ReferenceRange } from '@/components/Res
 import Link from 'next/link';
 import { Trash2 } from 'lucide-react';
 import { useApi } from '@/lib/api';
-import { PAGE, CARD, BTN_PRIMARY, TEXT_LABEL, LINK_ACCENT } from '@/lib/styles';
+import { PAGE, CARD, BTN_PRIMARY, LINK_ACCENT, TEXT_LABEL, TABLE_HEADER_TEXT } from '@/lib/styles';
 
 const HISTORY_KEY = 'hemalink:resultsHistory';
 
@@ -178,25 +178,13 @@ export default function SummaryPage() {
                   </div>
 
                   {/* User Information */}
-                  <div className={`${CARD} p-4`}>
-                    <h3 className="mb-3 text-sm font-semibold text-white">User Information</h3>
-                    <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 text-sm">
-                      <div>
-                        <div className={`${TEXT_LABEL} mb-1`}>Age</div>
-                        <div className="text-white font-medium">{activeItem.age || '—'}</div>
-                      </div>
-                      <div>
-                        <div className={`${TEXT_LABEL} mb-1`}>Sex</div>
-                        <div className="text-white font-medium">{formatSex(activeItem.sex)}</div>
-                      </div>
-                      <div>
-                        <div className={`${TEXT_LABEL} mb-1`}>Test Date</div>
-                        <div className="text-white font-medium">{formatDate(activeItem.testDate)}</div>
-                      </div>
-                      <div>
-                        <div className={`${TEXT_LABEL} mb-1`}>Upload Date</div>
-                        <div className="text-white font-medium">{new Date(activeItem.createdAt).toLocaleDateString()}</div>
-                      </div>
+                  <div className={`${CARD} p-6`}>
+                    <h3 className={`mb-4 text-lg font-semibold ${TABLE_HEADER_TEXT}`}>User Information</h3>
+                    <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm">
+                      <span><span className={TEXT_LABEL}>Age: </span><span className="text-white font-medium">{activeItem.age || '—'}</span></span>
+                      <span><span className={TEXT_LABEL}>Sex: </span><span className="text-white font-medium">{formatSex(activeItem.sex)}</span></span>
+                      <span><span className={TEXT_LABEL}>Test Date: </span><span className="text-white font-medium">{formatDate(activeItem.testDate)}</span></span>
+                      <span><span className={TEXT_LABEL}>Upload Date: </span><span className="text-white font-medium">{new Date(activeItem.createdAt).toLocaleDateString()}</span></span>
                     </div>
                   </div>
 
