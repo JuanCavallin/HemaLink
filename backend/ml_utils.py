@@ -91,10 +91,7 @@ def get_prediction(model, model_name, features, data_dict) -> dict:
     for model_feature in features:
         # Anemia: Gender field — 0 = male, 1 = female
         if model_feature == "Gender":
-            if data_dict.get('sex') == "M":
-                model_input_data[model_feature] = 0.0
-            else:
-                model_input_data[model_feature] = 0.0
+            model_input_data[model_feature] = 0.0 if data_dict.get('sex') == "M" else 1.0
             continue
 
         # Other models: sex field — 1 = male, 0 = female
