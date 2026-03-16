@@ -1,13 +1,14 @@
 "use client";
 
 import * as React from "react";
+import { CARD_GLASS } from "@/lib/styles";
 
 type Props = React.HTMLAttributes<HTMLDivElement> & { children?: React.ReactNode };
 
 export function Card({ className = "", ...props }: Props) {
 	return (
 		<div
-			className={`rounded-xl bg-black/40 border border-red-800/20 p-5 backdrop-blur-md shadow-[0_0_20px_rgba(255,0,60,0.1)] ${className}`}
+			className={`${CARD_GLASS} p-5 ${className}`}
 			{...props}
 		/>
 	);

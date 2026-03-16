@@ -4,6 +4,7 @@ import { useState, useRef, DragEvent, ChangeEvent } from 'react';
 import { Upload, FileText, XCircle, Loader2, FileImage, FileType } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@clerk/nextjs';
+import { PAGE, INPUT, SELECT } from '@/lib/styles';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -177,7 +178,7 @@ export default function DashboardPage() {
   const fileCount = uploadedFiles.length;
 
   return (
-    <main className="flex min-h-screen flex-col items-center p-8 md:p-16 bg-[var(--background)] text-[var(--foreground)]">
+    <main className={PAGE}>
       <div className="w-full max-w-4xl">
         <h1 className="mb-4 text-4xl font-bold text-center">
           Upload Your Lab Test Results
@@ -196,7 +197,7 @@ export default function DashboardPage() {
               id="age"
               value={age}
               onChange={(e) => setAge(e.target.value)}
-              className="w-full rounded-md border-gray-600 bg-gray-700 p-2 text-white focus:border-blue-500 focus:ring-blue-500"
+              className={INPUT}
               placeholder="e.g., 35"
               required
             />
@@ -209,7 +210,7 @@ export default function DashboardPage() {
               id="sex"
               value={sex}
               onChange={(e) => setSex(e.target.value)}
-              className="w-full rounded-md border-gray-600 bg-gray-700 p-2 text-white focus:border-blue-500 focus:ring-blue-500"
+              className={SELECT}
               required
             >
               <option value="">Select...</option>
@@ -226,7 +227,7 @@ export default function DashboardPage() {
               id="testDate"
               value={testDate}
               onChange={(e) => setTestDate(e.target.value)}
-              className="w-full rounded-md border-gray-600 bg-gray-700 p-2 text-white focus:border-blue-500 focus:ring-blue-500"
+              className={INPUT}
               placeholder="MM-DD-YYYY"
               maxLength={10}
             />

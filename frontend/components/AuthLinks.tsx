@@ -2,6 +2,7 @@
 
 import { SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
 import Link from 'next/link';
+import { BTN_PRIMARY } from '@/lib/styles';
 
 export default function AuthLinks() {
   return (
@@ -15,7 +16,7 @@ export default function AuthLinks() {
         </Link>
         <Link
           href="/sign-up"
-          className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+          className={BTN_PRIMARY}
         >
           Sign Up
         </Link>

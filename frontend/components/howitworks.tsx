@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { UploadCloud, Brain, BarChart } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "./ui/card";
+import { GRADIENT_BAR, ICON_CONTAINER, ICON_ACCENT } from "@/lib/styles";
 
 const steps = [
 	{
@@ -27,7 +28,7 @@ export default function HowItWorks() {
 		<section id="how-it-works" className="px-6 py-20">
 			<div className="mx-auto max-w-6xl">
 				<motion.h3 className="mb-2 text-center text-3xl font-bold text-white">How it works</motion.h3>
-				<div className="mb-8 h-1 w-28 mx-auto rounded-full bg-gradient-to-r from-red-500 to-rose-600 shadow-[0_0_20px_rgba(255,0,60,0.12)]" />
+				<div className={`mb-8 w-28 mx-auto ${GRADIENT_BAR}`} />
 
 				<div className="grid gap-6 sm:grid-cols-3">
 					{steps.map((s, i) => (
@@ -38,10 +39,10 @@ export default function HowItWorks() {
 							viewport={{ once: true }}
 							transition={{ delay: i * 0.12, duration: 0.6 }}
 						>
-							<Card className="bg-black/40 border border-red-800/20 text-white shadow-[0_0_20px_rgba(255,0,60,0.1)]">
+							<Card className="text-white">
 								<CardHeader>
-									<div className="flex h-12 w-12 items-center justify-center rounded-md bg-red-900/20">
-										<s.icon className="h-6 w-6 text-red-400" />
+									<div className={ICON_CONTAINER}>
+										<s.icon className={`h-6 w-6 ${ICON_ACCENT}`} />
 									</div>
 									<CardTitle>{s.title}</CardTitle>
 								</CardHeader>

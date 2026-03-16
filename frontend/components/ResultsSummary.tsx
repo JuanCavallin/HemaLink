@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { PILL_TONES, CARD_INNER, CARD_ALERT } from "@/lib/styles";
 
 // Types based on backend response
 export type PredictionResult = {
@@ -68,13 +69,7 @@ function ConfidenceBar({ value, state }: { value: number | null; state: string }
 }
 
 function Pill({ children, tone = "default" as "default" | "good" | "bad" | "muted" }: { children: React.ReactNode; tone?: "default" | "good" | "bad" | "muted" }) {
-  const tones: Record<string, string> = {
-    default: "bg-gray-800 text-gray-100 border-gray-700",
-    good: "bg-green-900/30 text-green-300 border-green-700/50",
-    bad: "bg-red-900/30 text-red-300 border-red-700/50",
-    muted: "bg-gray-900/50 text-gray-300 border-gray-700/60",
-  };
-  return <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs ${tones[tone]}`}>{children}</span>;
+  return <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs ${PILL_TONES[tone]}`}>{children}</span>;
 }
 
 function prettyKey(key: string) {
@@ -163,7 +158,7 @@ export default function ResultsSummary({
               {diseases.map((d) => {
                 const pred = predictions[d] ?? { label: "Unknown", confidence: null };
                 return (
-                  <div key={d} className="rounded-lg border border-gray-800 bg-gray-950 p-4">
+                  <div key={d} className={`${CARD_INNER} p-4`}>
                     <div className="flex items-center justify-between">
                       <div className="text-sm text-gray-300">{d}</div>
                       <Pill tone={pred.label === "Positive" ? "bad" : pred.label === "Negative" ? "good" : "muted"}>{pred.label}</Pill>
@@ -183,7 +178,7 @@ export default function ResultsSummary({
                 <h5 className="mb-3 text-lg font-bold text-red-400">Actionable Insights & Next Steps</h5>
                 <div className="space-y-6">
                   {positiveDiseases.map(item => (
-                    <div key={item.name} className="rounded-lg border border-red-800 bg-red-950/20 p-4">
+                    <div key={item.name} className={`${CARD_ALERT} p-4`}>
                       <h6 className="text-md font-semibold text-red-300 mb-3">
                         {item.name} Signal Detected ({item.pred.confidence?.toFixed(1)}% Confidence)
                       </h6>

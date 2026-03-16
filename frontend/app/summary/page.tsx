@@ -5,6 +5,7 @@ import ResultsSummary, { UploadResponse, ReferenceRange } from '@/components/Res
 import Link from 'next/link';
 import { Trash2 } from 'lucide-react';
 import { useApi } from '@/lib/api';
+import { PAGE, CARD, BTN_PRIMARY } from '@/lib/styles';
 
 const HISTORY_KEY = 'hemalink:resultsHistory';
 
@@ -94,7 +95,7 @@ export default function SummaryPage() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center p-8 md:p-16 bg-[var(--background)] text-[var(--foreground)]">
+    <main className={PAGE}>
       <div className="w-full max-w-6xl">
         <div className="mb-6 flex items-center justify-between">
           <h1 className="text-3xl font-bold">Your Results</h1>
@@ -102,16 +103,16 @@ export default function SummaryPage() {
         </div>
 
         {history.length === 0 ? (
-          <div className="rounded-xl border border-gray-800 bg-gray-900 p-8 text-center">
+          <div className={`${CARD} p-8 text-center`}>
             <p className="text-gray-300">No results yet. Upload a report to see your summary here.</p>
             <div className="mt-4">
-              <Link href="/upload" className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">Go to Upload</Link>
+              <Link href="/upload" className={BTN_PRIMARY}>Go to Upload</Link>
             </div>
           </div>
         ) : (
           <div className="grid gap-6 lg:grid-cols-[260px_1fr]">
             {/* history sidebar */}
-            <aside className="rounded-lg border border-gray-800 bg-gray-900 p-4">
+            <aside className={`${CARD} p-4`}>
               <h2 className="mb-3 text-sm font-semibold text-gray-400">History</h2>
               <div className="space-y-2">
                 {history.map((item) => (

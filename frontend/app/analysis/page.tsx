@@ -13,6 +13,17 @@ import {
 } from "recharts";
 import { useApi } from "@/lib/api";
 import { getTipsForDisease } from "@/components/ResultsSummary";
+import {
+  DISEASE_COLORS,
+  CHART,
+  TOOLTIP_STYLE,
+  TONE_CLASSES,
+  CARD,
+  CARD_ALERT,
+  BTN_SM,
+  PAGE,
+  TEXT_MUTED,
+} from "@/lib/styles";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -39,13 +50,6 @@ type SummaryResponse = {
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
-
-const DISEASE_COLORS: Record<string, string> = {
-  Anemia:   "#EF4444",  // red
-  Thyroid:  "#EAB308",  // yellow
-  Diabetes: "#F97316",  // orange
-  // CKD: "#A855F7",    // purple — model not yet in use
-};
 
 const CATEGORY_MAP: Record<string, string> = {
   Hemoglobin: "CBC", RBC: "CBC", WBC: "CBC", Hematocrit: "CBC",
@@ -110,12 +114,6 @@ function getChangeTone(val: MarkerValue): "good" | "bad" | "neutral" | null {
   }
   return "neutral";
 }
-
-const TONE_CLASSES: Record<string, string> = {
-  good:    "text-green-400",
-  bad:     "text-red-300",
-  neutral: "text-gray-400",
-};
 
 // ---------------------------------------------------------------------------
 // Page
@@ -351,7 +349,7 @@ export default function AnalysisPage() {
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
-    <main className="flex min-h-screen flex-col items-center p-8 md:p-16 bg-[var(--background)] text-[var(--foreground)]">
+    <main className={PAGE}>
       <div className="w-full max-w-4xl space-y-10">
 
         {/* ── Header ── */}
@@ -359,7 +357,7 @@ export default function AnalysisPage() {
           <h1 className="text-4xl font-bold">Analysis</h1>
           <button
             onClick={() => { loadBiomarkers(); loadDiseaseHistory(); loadSummary(); }}
-            className="rounded-md bg-blue-600 px-3 py-1 text-sm font-medium text-white hover:bg-blue-700"
+            className={BTN_SM}
           >
             Refresh
           </button>
@@ -385,10 +383,10 @@ export default function AnalysisPage() {
         {/* ══ Disease Risk Chart ══════════════════════════════════════════════ */}
         {graphMode === "disease" && (
           <>
-            <section className="rounded-lg border border-gray-800 bg-gray-900 p-6 space-y-5">
+            <section className={`${CARD} p-6 space-y-5`}>
               <h2 className="text-xl font-semibold">Disease Risk Trend</h2>
 
-              {diseaseLoading && <p className="text-sm text-gray-400">Loading...</p>}
+              {diseaseLoading && <p className={TEXT_MUTED}>Loading...</p>}
               {diseaseError   && <p className="text-sm text-red-400">Error: {diseaseError}</p>}
 
               {!diseaseLoading && !diseaseError && (
@@ -399,25 +397,20 @@ export default function AnalysisPage() {
                         data={diseaseChartData}
                         margin={{ top: 8, right: 16, left: 0, bottom: 8 }}
                       >
-                        <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                        <CartesianGrid strokeDasharray="3 3" stroke={CHART.grid} />
                         <XAxis
                           dataKey="date"
-                          tick={{ fill: "#9CA3AF", fontSize: 11 }}
+                          tick={{ fill: CHART.axisTick, fontSize: 11 }}
                           tickFormatter={(v: string) => v.slice(0, 10)}
                         />
                         <YAxis
                           domain={[0, 100]}
-                          tick={{ fill: "#9CA3AF", fontSize: 11 }}
+                          tick={{ fill: CHART.axisTick, fontSize: 11 }}
                           width={48}
                           tickFormatter={(v) => `${v}%`}
                         />
                         <Tooltip
-                          contentStyle={{
-                            backgroundColor: "#1F2937",
-                            border: "1px solid #374151",
-                            borderRadius: "6px",
-                            color: "#F9FAFB",
-                          }}
+                          contentStyle={TOOLTIP_STYLE}
                           labelFormatter={(v: string) => `Date: ${String(v).slice(0, 10)}`}
                           formatter={(value: number, name: string) => [
                             `${value.toFixed(1)}%`,
@@ -426,9 +419,9 @@ export default function AnalysisPage() {
                         />
                         <ReferenceLine
                           y={50}
-                          stroke="#6B7280"
+                          stroke={CHART.referenceLine}
                           strokeDasharray="4 4"
-                          label={{ value: "At Risk Threshold", fill: "#6B7280", fontSize: 11, position: "insideTopRight" }}
+                          label={{ value: "At Risk Threshold", fill: CHART.referenceLine, fontSize: 11, position: "insideTopRight" }}
                         />
                         {Object.keys(DISEASE_COLORS).map((d) =>
                           visibleDiseases.has(d) ? (
@@ -525,7 +518,7 @@ export default function AnalysisPage() {
                     const tips = getTipsForDisease(d);
                     const latest = diseaseStats[d]?.latest;
                     return (
-                      <div key={d} className="rounded-lg border border-red-800 bg-red-950/20 p-4">
+                      <div key={d} className={`${CARD_ALERT} p-4`}>
                         <h3 className="text-md font-semibold text-red-300 mb-3">
                           {d} Signal Detected ({latest?.toFixed(1)}% Risk)
                         </h3>
@@ -545,7 +538,7 @@ export default function AnalysisPage() {
 
         {/* ══ Biomarker Chart ════════════════════════════════════════════════ */}
         {graphMode === "biomarker" && (
-          <section className="rounded-lg border border-gray-800 bg-gray-900 p-6 space-y-4">
+          <section className={`${CARD} p-6 space-y-4`}>
             <div className="flex flex-wrap items-center gap-4">
               <h2 className="text-xl font-semibold">Biomarker Trend</h2>
               {biomarkers.length > 0 ? (
@@ -597,28 +590,23 @@ export default function AnalysisPage() {
             {!historyLoading && !historyError && history.length > 0 && (
               <ResponsiveContainer width="100%" height={280}>
                 <LineChart data={history} margin={{ top: 8, right: 16, left: 0, bottom: 8 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                  <CartesianGrid strokeDasharray="3 3" stroke={CHART.grid} />
                   <XAxis
                     dataKey="date"
-                    tick={{ fill: "#9CA3AF", fontSize: 11 }}
+                    tick={{ fill: CHART.axisTick, fontSize: 11 }}
                     tickFormatter={(v: string) => v.slice(0, 10)}
                   />
-                  <YAxis tick={{ fill: "#9CA3AF", fontSize: 11 }} width={48} />
+                  <YAxis tick={{ fill: CHART.axisTick, fontSize: 11 }} width={48} />
                   <Tooltip
-                    contentStyle={{
-                      backgroundColor: "#1F2937",
-                      border: "1px solid #374151",
-                      borderRadius: "6px",
-                      color: "#F9FAFB",
-                    }}
+                    contentStyle={TOOLTIP_STYLE}
                     labelFormatter={(v: string) => `Date: ${String(v).slice(0, 10)}`}
                   />
                   <Line
                     type="monotone"
                     dataKey="value"
-                    stroke="#3B82F6"
+                    stroke={CHART.biomarkerLine}
                     strokeWidth={2}
-                    dot={{ r: 4, fill: "#3B82F6" }}
+                    dot={{ r: 4, fill: CHART.biomarkerLine }}
                     activeDot={{ r: 6 }}
                     name={prettyKey(selected)}
                   />
