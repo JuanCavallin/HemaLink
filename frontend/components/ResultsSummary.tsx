@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { PILL_TONES, CARD_INNER, CARD_ALERT } from "@/lib/styles";
+import { PILL_TONES, CARD, CARD_INNER, CARD_ALERT, TEXT_ERROR, TEXT_BODY, TABLE_HEADER_TEXT, BORDER_MUTED } from "@/lib/styles";
 
 // Types based on backend response
 export type PredictionResult = {
@@ -148,10 +148,9 @@ export default function ResultsSummary({
           .filter(item => item.pred?.label === "Positive" && item.tips.length > 0);
 
         return (
-          <div key={filename} className="rounded-xl border border-gray-800 bg-gray-900 p-6 shadow">
+          <div key={filename} className={`${CARD} p-6`}>
             <div className="mb-4 flex items-center justify-between">
-              <h4 className="text-lg font-semibold text-white">Summary for {filename}</h4>
-              <Pill tone="muted">Analyzed</Pill>
+              <h4 className={`text-lg font-semibold ${TABLE_HEADER_TEXT}`}>AI Risk Prediction Scores</h4>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-3">
@@ -160,29 +159,29 @@ export default function ResultsSummary({
                 return (
                   <div key={d} className={`${CARD_INNER} p-4`}>
                     <div className="flex items-center justify-between">
-                      <div className="text-sm text-gray-300">{d}</div>
+                      <div className="text-sm font-medium text-white">{d}</div>
                       <Pill tone={pred.label === "Positive" ? "bad" : pred.label === "Negative" ? "good" : "muted"}>{pred.label}</Pill>
                     </div>
-                    <div className="mt-2 text-2xl font-bold text-white">
+                    <div className={`mt-2 text-2xl font-bold ${pred.label === "Positive" ? "text-red-400" : pred.label === "Negative" ? "text-green-400" : "text-white"}`}>
                       {pred.confidence !== null && pred.confidence !== undefined ? `${pred.confidence.toFixed(1)}%` : "—"}
                     </div>
                     <ConfidenceBar value={pred.confidence} state={pred.label} />
-                    <div className="mt-2 text-xs text-gray-400">Confidence</div>
+                    <div className="mt-2 text-xs text-white">Confidence</div>
                   </div>
                 );
               })}
             </div>
 
             {positiveDiseases.length > 0 && (
-              <div className="mt-8 border-t border-gray-800 pt-6">
-                <h5 className="mb-3 text-lg font-bold text-red-400">Actionable Insights & Next Steps</h5>
+              <div className={`mt-8 border-t ${BORDER_MUTED} pt-6`}>
+                <h5 className={`mb-3 text-lg font-bold ${TEXT_ERROR}`}>Actionable Insights & Next Steps</h5>
                 <div className="space-y-6">
                   {positiveDiseases.map(item => (
                     <div key={item.name} className={`${CARD_ALERT} p-4`}>
-                      <h6 className="text-md font-semibold text-red-300 mb-3">
+                      <h6 className={`text-md font-semibold ${TABLE_HEADER_TEXT} mb-3`}>
                         {item.name} Signal Detected ({item.pred.confidence?.toFixed(1)}% Confidence)
                       </h6>
-                      <ul className="list-disc ml-4 space-y-2 text-sm text-gray-200">
+                      <ul className={`list-disc ml-4 space-y-2 text-sm ${TEXT_BODY}`}>
                         {item.tips.map((tip, index) => (
                           <li key={index} className="pl-1">{tip}</li>
                         ))}
@@ -194,7 +193,9 @@ export default function ResultsSummary({
             )}
 
             <div className="mt-6">
-              <h5 className="mb-2 text-sm font-medium text-gray-300">Key biomarkers</h5>
+              <h4 className={`text-lg font-semibold ${TABLE_HEADER_TEXT}`}>Key Biomarkers</h4>
+            </div>
+            <div className="mt-6">
               {biomarkers.length ? (
                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
                   {biomarkers.map(([k, v]) => {
@@ -208,15 +209,15 @@ export default function ResultsSummary({
                       valueColor = outOfRange ? "text-red-400" : "text-green-400";
                     }
                     return (
-                      <div key={k} className="flex items-center justify-between rounded border border-gray-800 bg-gray-950 px-3 py-2">
-                        <span className="text-gray-300">{prettyKey(k)}</span>
+                      <div key={k} className={`flex items-center justify-between ${CARD_INNER} px-3 py-2`}>
+                        <span className="text-white">{prettyKey(k)}</span>
                         <span className={`font-medium ${valueColor}`}>{v}</span>
                       </div>
                     );
                   })}
                 </div>
               ) : (
-                <div className="rounded border border-gray-800 bg-gray-950 p-3 text-sm text-gray-400">No biomarkers extracted.</div>
+                <div className={`${CARD_INNER} p-3 text-sm text-gray-400`}>No biomarkers extracted.</div>
               )}
             </div>
           </div>

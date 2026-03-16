@@ -16,7 +16,7 @@ export default function Header() {
                     </Link>
 
                     <nav className="hidden gap-6 md:flex">
-                        <Link href="/#home" className={NAV_LINK}>
+                        <Link href="/" className={NAV_LINK}>
                             Home
                         </Link>
                         {/* <Link href="/#about" className={NAV_LINK}>

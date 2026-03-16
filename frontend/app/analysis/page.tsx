@@ -23,6 +23,13 @@ import {
   BTN_SM,
   PAGE,
   TEXT_MUTED,
+  TEXT_LABEL,
+  TEXT_ERROR,
+  TEXT_BODY,
+  TABLE_HEADER_TEXT,
+  TABLE_ROW_UNHEALTHY,
+  TABLE_ROW_HEALTHY,
+  BORDER_MUTED,
 } from "@/lib/styles";
 
 // ---------------------------------------------------------------------------
@@ -151,16 +158,6 @@ export default function AnalysisPage() {
     loadBiomarkers();
     loadDiseaseHistory();
     loadSummary();
-
-    function handleVisibilityChange() {
-      if (document.visibilityState === "visible") {
-        loadBiomarkers();
-        loadDiseaseHistory();
-        loadSummary();
-      }
-    }
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
   }, []);
 
   async function loadBiomarkers() {
@@ -354,7 +351,7 @@ export default function AnalysisPage() {
 
         {/* ── Header ── */}
         <div className="flex items-center justify-between">
-          <h1 className="text-4xl font-bold">Analysis</h1>
+          <h2 className="text-4xl font-bold">Analysis</h2>
           <button
             onClick={() => { loadBiomarkers(); loadDiseaseHistory(); loadSummary(); }}
             className={BTN_SM}
@@ -364,15 +361,15 @@ export default function AnalysisPage() {
         </div>
 
         {/* ── Graph mode toggle ── */}
-        <div className="flex gap-1 rounded-lg border border-gray-700 bg-gray-900 p-1 w-fit">
+        <div className="flex gap-1 rounded-lg border border-rose-900/40 bg-rose-950/10 p-1 w-fit">
           {(["disease", "biomarker"] as const).map((mode) => (
             <button
               key={mode}
               onClick={() => setGraphMode(mode)}
               className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
                 graphMode === mode
-                  ? "bg-blue-600 text-white"
-                  : "text-gray-400 hover:text-white"
+                  ? "bg-rose-800/70 text-white border border-rose-700/50"
+                  : "text-rose-200/50 hover:text-rose-100"
               }`}
             >
               {mode === "disease" ? "Disease Risk" : "Biomarker"}
@@ -387,7 +384,7 @@ export default function AnalysisPage() {
               <h2 className="text-xl font-semibold">Disease Risk Trend</h2>
 
               {diseaseLoading && <p className={TEXT_MUTED}>Loading...</p>}
-              {diseaseError   && <p className="text-sm text-red-400">Error: {diseaseError}</p>}
+              {diseaseError   && <p className={`text-sm ${TEXT_ERROR}`}>Error: {diseaseError}</p>}
 
               {!diseaseLoading && !diseaseError && (
                 <>
@@ -421,7 +418,7 @@ export default function AnalysisPage() {
                           y={50}
                           stroke={CHART.referenceLine}
                           strokeDasharray="4 4"
-                          label={{ value: "At Risk Threshold", fill: CHART.referenceLine, fontSize: 11, position: "insideTopRight" }}
+                          label={{ value: "At Risk Threshold", fill: CHART.referenceLine, fontSize: 11, position: "insideTopLeft" }}
                         />
                         {Object.keys(DISEASE_COLORS).map((d) =>
                           visibleDiseases.has(d) ? (
@@ -441,7 +438,7 @@ export default function AnalysisPage() {
                       </LineChart>
                     </ResponsiveContainer>
                   ) : (
-                    <p className="text-sm text-gray-400">
+                    <p className={TEXT_MUTED}>
                       No disease history yet — upload a lab report to see trends.
                     </p>
                   )}
@@ -456,13 +453,13 @@ export default function AnalysisPage() {
                           onClick={() => toggleDisease(d)}
                           className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
                             on
-                              ? "border-gray-600 bg-gray-800 text-white"
-                              : "border-gray-700 bg-gray-900 text-gray-500"
+                              ? "border-rose-700/60 bg-rose-900/30 text-white"
+                              : "border-rose-900/30 bg-rose-950/10 text-rose-300/50"
                           }`}
                         >
                           <span
                             className="h-2 w-2 rounded-full"
-                            style={{ backgroundColor: on ? color : "#6B7280" }}
+                            style={{ backgroundColor: on ? color : CHART.referenceLine }}
                           />
                           {d}
                         </button>
@@ -474,7 +471,7 @@ export default function AnalysisPage() {
                   {Object.keys(DISEASE_COLORS).some(
                     (d) => visibleDiseases.has(d) && diseaseStats[d]?.latest !== null
                   ) && (
-                    <div className="flex flex-wrap gap-6 text-sm border-t border-gray-800 pt-4">
+                    <div className={`flex flex-wrap gap-6 text-sm border-t ${BORDER_MUTED} pt-4`}>
                       {Object.entries(DISEASE_COLORS).map(([d, color]) => {
                         if (!visibleDiseases.has(d)) return null;
                         const stats = diseaseStats[d];
@@ -489,7 +486,7 @@ export default function AnalysisPage() {
                                 className="h-2 w-2 rounded-full"
                                 style={{ backgroundColor: color }}
                               />
-                              <span className="text-gray-400">{d}</span>
+                              <span className="text-rose-300/60">{d}</span>
                             </div>
                             <p className="text-lg font-semibold text-white pl-3.5">
                               {stats.latest.toFixed(1)}%
@@ -512,7 +509,7 @@ export default function AnalysisPage() {
             {/* ── Risk tips ── */}
             {atRiskDiseases.length > 0 && (
               <section className="space-y-4">
-                <h2 className="text-xl font-semibold text-red-400">Actionable Insights & Next Steps</h2>
+                <h2 className={`text-xl font-semibold ${TEXT_ERROR}`}>Actionable Insights & Next Steps</h2>
                 <div className="space-y-4">
                   {atRiskDiseases.map((d) => {
                     const tips = getTipsForDisease(d);
@@ -522,7 +519,7 @@ export default function AnalysisPage() {
                         <h3 className="text-md font-semibold text-red-300 mb-3">
                           {d} Signal Detected ({latest?.toFixed(1)}% Risk)
                         </h3>
-                        <ul className="list-disc ml-4 space-y-2 text-sm text-gray-200">
+                        <ul className={`list-disc ml-4 space-y-2 text-sm ${TEXT_BODY}`}>
                           {tips.map((tip, i) => (
                             <li key={i} className="pl-1">{tip}</li>
                           ))}
@@ -545,14 +542,14 @@ export default function AnalysisPage() {
                 <select
                   value={selected}
                   onChange={(e) => setSelected(e.target.value)}
-                  className="rounded-md border border-gray-600 bg-gray-800 px-3 py-1.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="rounded-md border border-rose-900/50 bg-black/40 px-3 py-1.5 text-sm text-white focus:outline-none focus:ring-1 focus:ring-rose-700"
                 >
                   {biomarkers.map((b) => (
                     <option key={b} value={b}>{prettyKey(b)}</option>
                   ))}
                 </select>
               ) : (
-                <span className="text-sm text-gray-400">
+                <span className={TEXT_MUTED}>
                   No data yet — upload a lab report on the Upload page.
                 </span>
               )}
@@ -561,18 +558,18 @@ export default function AnalysisPage() {
             {latestValue !== null && (
               <div className="flex gap-6 text-sm">
                 <div>
-                  <span className="text-gray-400">Latest</span>
+                  <span className="text-rose-300/60">Latest</span>
                   <p className="text-lg font-semibold text-white">{latestValue}</p>
                 </div>
                 {prevValue !== null && (
                   <div>
-                    <span className="text-gray-400">Previous</span>
+                    <span className="text-rose-300/60">Previous</span>
                     <p className="text-lg font-semibold text-white">{prevValue}</p>
                   </div>
                 )}
                 {delta !== null && (
                   <div>
-                    <span className="text-gray-400">Change</span>
+                    <span className="text-rose-300/60">Change</span>
                     <p className={`text-lg font-semibold ${
                       deltaTone
                         ? TONE_CLASSES[deltaTone]
@@ -585,8 +582,8 @@ export default function AnalysisPage() {
               </div>
             )}
 
-            {historyLoading && <p className="text-sm text-gray-400">Loading chart...</p>}
-            {historyError   && <p className="text-sm text-red-400">Error: {historyError}</p>}
+            {historyLoading && <p className={TEXT_MUTED}>Loading chart...</p>}
+            {historyError   && <p className={`text-sm ${TEXT_ERROR}`}>Error: {historyError}</p>}
             {!historyLoading && !historyError && history.length > 0 && (
               <ResponsiveContainer width="100%" height={280}>
                 <LineChart data={history} margin={{ top: 8, right: 16, left: 0, bottom: 8 }}>
@@ -614,7 +611,7 @@ export default function AnalysisPage() {
               </ResponsiveContainer>
             )}
             {!historyLoading && !historyError && history.length === 0 && selected && (
-              <p className="text-sm text-gray-400">
+              <p className={TEXT_MUTED}>
                 No history yet for <strong>{prettyKey(selected)}</strong>.
               </p>
             )}
@@ -623,12 +620,12 @@ export default function AnalysisPage() {
 
         {/* ══ Latest Values Table ════════════════════════════════════════════ */}
         <section className="space-y-4">
-          <h2 className="text-xl font-semibold">Latest Values</h2>
+          <h2 className="text-xl font-semibold">Detailed Blood Test Results</h2>
 
-          {summaryLoading && <p className="text-gray-400 text-sm">Loading...</p>}
-          {summaryError   && <p className="text-red-400 text-sm">Error: {summaryError}</p>}
+          {summaryLoading && <p className={TEXT_MUTED}>Loading...</p>}
+          {summaryError   && <p className={`text-sm ${TEXT_ERROR}`}>Error: {summaryError}</p>}
           {!summaryLoading && summaryEntries.length === 0 && !summaryError && (
-            <p className="text-gray-400 text-sm">No results available.</p>
+            <p className={TEXT_MUTED}>No results available.</p>
           )}
 
           {!summaryLoading && presentCategories.length > 0 && (
@@ -638,13 +635,13 @@ export default function AnalysisPage() {
                 {(["All", "Healthy", "Unhealthy"] as const).map((f) => {
                   const active = activeCategories.has(f);
                   const colorActive =
-                    f === "Healthy"   ? "border-green-500 bg-green-700 text-white" :
-                    f === "Unhealthy" ? "border-red-500 bg-red-700 text-white" :
-                                        "border-blue-500 bg-blue-600 text-white";
+                    f === "Healthy"   ? "border-green-700/60 bg-green-900/40 text-green-300" :
+                    f === "Unhealthy" ? "border-red-700/60 bg-red-900/40 text-red-300" :
+                                        "border-rose-700/60 bg-rose-800/60 text-white";
                   const colorInactive =
-                    f === "Healthy"   ? "border-green-800 bg-gray-800 text-green-400 hover:border-green-600 hover:text-green-300" :
-                    f === "Unhealthy" ? "border-red-900 bg-gray-800 text-red-400 hover:border-red-700 hover:text-red-300" :
-                                        "border-gray-700 bg-gray-800 text-gray-400 hover:border-gray-500 hover:text-gray-200";
+                    f === "Healthy"   ? "border-rose-900/30 bg-rose-950/10 text-rose-300/50 hover:border-green-800/50 hover:text-green-400/70" :
+                    f === "Unhealthy" ? "border-rose-900/30 bg-rose-950/10 text-rose-300/50 hover:border-red-800/50 hover:text-red-400/70" :
+                                        "border-rose-900/30 bg-rose-950/10 text-rose-300/50 hover:border-rose-700/40 hover:text-rose-200";
                   return (
                     <button
                       key={f}
@@ -656,7 +653,7 @@ export default function AnalysisPage() {
                   );
                 })}
 
-                <span className="h-4 w-px bg-gray-700" />
+                <span className="h-4 w-px bg-rose-900/40" />
 
                 {presentCategories.map((cat) => {
                   const active = activeCategories.has(cat);
@@ -666,8 +663,8 @@ export default function AnalysisPage() {
                       onClick={() => toggleCategory(cat)}
                       className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
                         active
-                          ? "border-blue-500 bg-blue-600 text-white"
-                          : "border-gray-700 bg-gray-800 text-gray-400 hover:border-gray-500 hover:text-gray-200"
+                          ? "border-rose-700/60 bg-rose-800/60 text-white"
+                          : "border-rose-900/30 bg-rose-950/10 text-rose-300/50 hover:border-rose-700/40 hover:text-rose-200"
                       }`}
                     >
                       {cat}
@@ -682,8 +679,8 @@ export default function AnalysisPage() {
                   const rows = grouped[cat] ?? [];
                   const allHealthy = rows.every(([, val]) => Boolean(val?.healthy ?? true));
                   return (
-                    <div key={cat} className="overflow-x-auto rounded-lg border border-gray-800 bg-gray-900">
-                      <div className="border-b border-gray-800 px-4 py-2">
+                    <div key={cat} className={`overflow-x-auto ${CARD}`}>
+                      <div className="border-b border-rose-900/30 px-4 py-2">
                         {allHealthy ? (
                           <span className="text-sm font-semibold text-green-400">
                             {cat} values are all healthy!
@@ -693,13 +690,13 @@ export default function AnalysisPage() {
                         )}
                       </div>
 
-                      <table className="w-full table-auto text-sm">
+                      <table className="w-full table-fixed text-sm">
                         <thead>
-                          <tr className="text-left text-gray-500">
-                            <th className="px-4 py-2 font-normal">Biomarker</th>
-                            <th className="px-4 py-2 font-normal">Latest Value</th>
-                            <th className="px-4 py-2 font-normal">Healthy Range</th>
-                            <th className="px-4 py-2 font-normal">Change vs Prev</th>
+                          <tr className={`text-left ${TABLE_HEADER_TEXT}`}>
+                            <th className="px-4 py-2 font-normal w-[25%]">Biomarker</th>
+                            <th className="px-4 py-2 font-normal w-[25%]">Latest Value</th>
+                            <th className="px-4 py-2 font-normal w-[25%]">Healthy Range</th>
+                            <th className="px-4 py-2 font-normal w-[25%]">Change vs Prev</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -713,17 +710,17 @@ export default function AnalysisPage() {
                                 key={key}
                                 className={
                                   !healthy
-                                    ? "border-t border-red-900/60 bg-red-950/40"
-                                    : "border-t border-gray-800/60"
+                                    ? TABLE_ROW_UNHEALTHY
+                                    : TABLE_ROW_HEALTHY
                                 }
                               >
                                 <td className={`px-4 py-3 font-medium ${!healthy ? "text-red-200" : "text-white"}`}>
                                   {prettyKey(key)}
                                 </td>
-                                <td className={`px-4 py-3 ${!healthy ? "text-red-200" : "text-gray-200"}`}>
+                                <td className={`px-4 py-3 ${!healthy ? "text-red-200" : TEXT_BODY}`}>
                                   {String(val?.value ?? "N/A")}
                                 </td>
-                                <td className={`px-4 py-3 ${!healthy ? "text-red-300/70" : "text-gray-400"}`}>
+                                <td className={`px-4 py-3 ${!healthy ? "text-red-300/70" : "text-rose-300/40"}`}>
                                   {val?.range || "—"}
                                 </td>
                                 <td className="px-4 py-3">
@@ -733,7 +730,7 @@ export default function AnalysisPage() {
                                       {changeNum}%
                                     </span>
                                   ) : (
-                                    <span className="text-gray-600">—</span>
+                                    <span className="text-rose-900/60">—</span>
                                   )}
                                 </td>
                               </tr>

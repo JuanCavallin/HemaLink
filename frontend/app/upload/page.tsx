@@ -4,7 +4,7 @@ import { useState, useRef, DragEvent, ChangeEvent } from 'react';
 import { Upload, FileText, XCircle, Loader2, FileImage, FileType } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@clerk/nextjs';
-import { PAGE, INPUT, SELECT } from '@/lib/styles';
+import { PAGE, INPUT, SELECT, TEXT_ERROR, TEXT_SUCCESS } from '@/lib/styles';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -183,13 +183,13 @@ export default function DashboardPage() {
         <h1 className="mb-4 text-4xl font-bold text-center">
           Upload Your Lab Test Results
         </h1>
-        <h2 className="mb-8 text-2xl text-center text-gray-400">
+        <h2 className="mb-8 text-2xl text-center text-rose-300/60">
           For Fast, Preliminary Disease Risk Prediction
         </h2>
 
         <div className="mb-6 grid grid-cols-3 gap-4">
           <div>
-            <label htmlFor="age" className="block text-sm font-medium text-gray-300 mb-1">
+            <label htmlFor="age" className="block text-sm font-medium text-rose-200/70 mb-1">
               Age
             </label>
             <input
@@ -203,7 +203,7 @@ export default function DashboardPage() {
             />
           </div>
           <div>
-            <label htmlFor="sex" className="block text-sm font-medium text-gray-300 mb-1">
+            <label htmlFor="sex" className="block text-sm font-medium text-rose-200/70 mb-1">
               Sex
             </label>
             <select
@@ -219,7 +219,7 @@ export default function DashboardPage() {
             </select>
           </div>
           <div>
-            <label htmlFor="testDate" className="block text-sm font-medium text-gray-300 mb-1">
+            <label htmlFor="testDate" className="block text-sm font-medium text-rose-200/70 mb-1">
               Test Date
             </label>
             <input
@@ -236,11 +236,11 @@ export default function DashboardPage() {
 
         {/* drag and drop file upload */}
         <div
-          className={`rounded-lg border-2 border-dashed bg-gray-800 p-12 text-center transition-all duration-200
+          className={`rounded-lg border-2 border-dashed bg-rose-950/10 p-12 text-center transition-all duration-200
             ${
               fileCount > 0
-                ? 'border-blue-500'
-                : 'border-gray-600'
+                ? 'border-rose-600/60'
+                : 'border-rose-900/40'
             }
           `}
           onDragOver={handleDragOver}
@@ -260,7 +260,7 @@ export default function DashboardPage() {
 
           {/* error message from frontend validation */}
           {error && (
-            <div className="mb-4 flex flex-col items-center text-red-500">
+            <div className={`mb-4 flex flex-col items-center ${TEXT_ERROR}`}>
               <XCircle className="mb-2 h-10 w-10" />
               <span className="text-lg font-semibold">{error}</span>
             </div>
@@ -268,7 +268,7 @@ export default function DashboardPage() {
           
           {/* error message from backend upload/processing */}
           {uploadError && (
-            <div className="mb-4 flex flex-col items-center text-red-500">
+            <div className={`mb-4 flex flex-col items-center ${TEXT_ERROR}`}>
               <XCircle className="mb-2 h-10 w-10" />
               <span className="text-lg font-semibold">{uploadError}</span>
             </div>
@@ -276,12 +276,12 @@ export default function DashboardPage() {
 
           {(!error && !uploadError && !uploadSuccess || fileCount === 0) && (
             <>
-              <Upload className="mx-auto mb-4 h-12 w-12 text-gray-500" />
+              <Upload className="mx-auto mb-4 h-12 w-12 text-rose-400/50" />
               <h3 className="mb-2 text-2xl font-semibold text-white">
                 {fileCount > 0 ? 'Drag & Drop More Files Here' : 'Drag & Drop Your File Here'}
               </h3>
-              <p className="text-gray-400">Or click to browse files</p>
-              <p className="mt-4 text-sm text-gray-500">
+              <p className="text-rose-300/60">Or click to browse files</p>
+              <p className="mt-4 text-sm text-rose-300/40">
                 Supported: .txt, .png, .jpg, .jpeg, .pdf 
               </p>
             </>
@@ -289,9 +289,9 @@ export default function DashboardPage() {
 
            {/* fastAPI success message */}
            {uploadSuccess && (
-            <div className="mb-4 flex flex-col items-center text-green-500">
+            <div className={`mb-4 flex flex-col items-center ${TEXT_SUCCESS}`}>
               <span className="text-lg font-semibold">Upload Complete!</span>
-              <p className="text-sm text-green-300 mt-1">Ready for the next analysis.</p>
+              <p className={`text-sm ${TEXT_SUCCESS} mt-1`}>Ready for the next analysis.</p>
             </div>
           )}
         </div>
@@ -300,11 +300,11 @@ export default function DashboardPage() {
         {fileCount > 0 && (
           <div className="mt-6 space-y-3">
             <h3 className="text-xl font-semibold">Uploaded Files ({fileCount})</h3>
-            <div className="rounded-lg bg-gray-800 p-4">
+            <div className="rounded-lg border border-rose-900/30 bg-rose-950/10 p-4">
               {uploadedFiles.map((file, index) => (
                 <div
                   key={index}
-                  className="flex items-center justify-between border-b border-gray-700 py-2 last:border-b-0"
+                  className="flex items-center justify-between border-b border-rose-900/30 py-2 last:border-b-0"
                 >
                   <div className="flex items-center space-x-2">
                     {/* icon rendering */}
@@ -322,7 +322,7 @@ export default function DashboardPage() {
                       e.stopPropagation();
                       removeFile(file.name);
                     }}
-                    className="text-gray-400 hover:text-red-500"
+                    className="text-rose-300/50 hover:text-red-400"
                     aria-label={`Remove ${file.name}`}
                     disabled={isUploading}
                   >
@@ -336,7 +336,7 @@ export default function DashboardPage() {
               <button
                 onClick={handleSubmit}
                 disabled={isUploading || fileCount === 0 || !age || !sex}
-                className="inline-flex items-center justify-center rounded-md bg-blue-600 px-6 py-3 text-lg font-semibold text-white shadow-sm transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex items-center justify-center rounded-md bg-red-900/60 border border-red-800/60 px-6 py-3 text-lg font-semibold text-red-100 shadow-sm transition-colors hover:bg-red-800/70 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isUploading ? (
                   <>
@@ -356,7 +356,7 @@ export default function DashboardPage() {
         {uploadSuccess && (
             <div className="mt-8">
                 <h3 className="text-2xl font-semibold text-green-400 mb-4">FastAPI Confirmation</h3>
-                <div className="rounded-lg bg-gray-900 p-6 text-green-300 overflow-x-auto">
+                <div className="rounded-lg border border-rose-900/30 bg-black/40 p-6 text-green-300 overflow-x-auto">
                     <pre className='whitespace-pre-wrap'>
                       {JSON.stringify(uploadSuccess, null, 2)}
                     </pre>

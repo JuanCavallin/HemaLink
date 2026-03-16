@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { GRADIENT_TEXT, BTN_GRADIENT } from "@/lib/styles";
+import { GRADIENT_TEXT, BTN_GRADIENT, BTN_SECONDARY } from "@/lib/styles";
 
 export default function Hero() {
 	return (
@@ -24,10 +24,10 @@ export default function Hero() {
 
 					<div className="flex gap-4">
 						<Link href="/upload" className={`inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold shadow-md transition-transform hover:scale-[1.03] ${BTN_GRADIENT}`}>
-							Start Analysis
+							Upload New Test
 						</Link>
-						<Link href="#how-it-works" className="inline-flex items-center gap-2 rounded-md border border-red-800/30 px-6 py-3 text-sm text-white/90 hover:text-red-400">
-							How it works
+						<Link href="/analysis" className={BTN_SECONDARY}>
+							View Health Progression
 						</Link>
 					</div>
 				</div>

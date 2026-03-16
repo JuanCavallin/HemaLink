@@ -27,13 +27,13 @@ export const DISEASE_COLORS: Record<string, string> = {
 // Tailwind classes cannot be used inside recharts props — these must stay hex.
 
 export const CHART = {
-  grid:          "#374151",  // gray-700
-  axisTick:      "#9CA3AF",  // gray-400
-  tooltipBg:     "#1F2937",  // gray-800
-  tooltipBorder: "#374151",  // gray-700
-  tooltipText:   "#F9FAFB",  // gray-50
-  referenceLine: "#6B7280",  // gray-500
-  biomarkerLine: "#3B82F6",  // blue-500
+  grid:          "#3D1520",  // rose-950 tint — visible but not harsh
+  axisTick:      "#FECDD3",  // rose-200 — soft, readable ticks
+  tooltipBg:     "#0D0509",  // near-black
+  tooltipBorder: "#4C0519",  // rose-950 border
+  tooltipText:   "#FFF1F2",  // rose-50 — near white
+  referenceLine: "#FDA4AF",  // rose-300 — soft threshold line
+  biomarkerLine: "#FB7185",  // rose-400 — biomarker trend line
 } as const;
 
 /** Drop-in contentStyle for all recharts <Tooltip> components. */
@@ -53,14 +53,22 @@ export const TONE_CLASSES: Record<string, string> = {
   neutral: "text-gray-400",
 };
 
+// ── 3b. Standalone status / body text ─────────────────────────────────────
+/** Error message color (no size — compose with text-sm etc. as needed). */
+export const TEXT_ERROR   = "text-red-400";
+/** Success / healthy message color. */
+export const TEXT_SUCCESS = "text-green-400";
+/** Body text inside dark cards and sections. */
+export const TEXT_BODY    = "text-white/80";
+
 // ── 4. Pill / badge tones ─────────────────────────────────────────────────
 // Used by the <Pill> component in ResultsSummary.
 
 export const PILL_TONES: Record<string, string> = {
-  default: "bg-gray-800 text-gray-100 border-gray-700",
+  default: "bg-red-950/30 text-red-100 border-red-900/50",
   good:    "bg-green-900/30 text-green-300 border-green-700/50",
-  bad:     "bg-red-900/30 text-red-300 border-red-700/50",
-  muted:   "bg-gray-900/50 text-gray-300 border-gray-700/60",
+  bad:     "bg-red-900/40 text-red-300 border-red-700/60",
+  muted:   "bg-black/40 text-red-200/70 border-red-900/30",
 };
 
 // ── 5. Reusable className strings ─────────────────────────────────────────
@@ -71,36 +79,53 @@ export const PAGE =
 
 // -- Cards --
 /** Standard dark card used throughout app pages. Add padding/spacing per use. */
-export const CARD       = "rounded-lg border border-gray-800 bg-gray-900";
+export const CARD       = "rounded-lg border border-rose-900/30 bg-rose-950/10";
 /** Slightly darker inset card for nested content. */
-export const CARD_INNER = "rounded-lg border border-gray-800 bg-gray-950";
+export const CARD_INNER = "rounded-lg border border-rose-900/20 bg-black/30";
 /** Glass morphism card used on marketing/landing pages (header, howitworks, about). */
 export const CARD_GLASS =
   "rounded-xl bg-black/40 border border-red-800/20 backdrop-blur-md shadow-[0_0_20px_rgba(255,0,60,0.1)]";
 /** Red-tinted alert card for disease risk / out-of-range indicators. */
 export const CARD_ALERT = "rounded-lg border border-red-800 bg-red-950/20";
 
+// -- Links --
+/** Accent-colored inline link (e.g. "Upload New", "View Details"). */
+export const LINK_ACCENT = "text-rose-400 hover:text-rose-300";
+
 // -- Buttons --
-/** Standard primary blue button. */
+/** Standard primary button. */
 export const BTN_PRIMARY =
-  "rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors";
-/** Smaller blue button (e.g. Refresh). */
+  "rounded-md bg-red-900/60 border border-red-800/60 px-4 py-2 text-sm font-medium text-red-100 hover:bg-red-800/70 transition-colors";
+/** Smaller button (e.g. Refresh). */
 export const BTN_SM =
-  "rounded-md bg-blue-600 px-3 py-1 text-sm font-medium text-white hover:bg-blue-700";
+  "rounded-md bg-red-900/60 border border-red-800/60 px-3 py-1 text-sm font-medium text-red-100 hover:bg-red-800/70";
 /** Red-to-rose gradient button used on landing pages (Sign in, Start Analysis). */
 export const BTN_GRADIENT =
   "rounded-md bg-gradient-to-r from-red-600 to-rose-700 text-white hover:brightness-110";
+/** Secondary ghost button (hero page, outline style). */
+export const BTN_SECONDARY =
+  "inline-flex items-center gap-2 rounded-md border border-red-800/30 px-6 py-3 text-sm text-white/90 hover:text-red-400";
 
 // -- Form inputs --
 export const INPUT =
-  "w-full rounded-md border border-gray-600 bg-gray-700 p-2 text-white focus:border-blue-500 focus:ring-blue-500";
+  "w-full rounded-md border border-red-900/50 bg-black/40 p-2 text-white focus:border-red-700 focus:ring-red-700";
 export const SELECT =
-  "w-full rounded-md border border-gray-600 bg-gray-700 p-2 text-white focus:border-blue-500 focus:ring-blue-500";
+  "w-full rounded-md border border-red-900/50 bg-black/40 p-2 text-white focus:border-red-700 focus:ring-red-700";
+
+// -- Table --
+/** Column header text color (also used for section sub-headings like "Key biomarkers"). */
+export const TABLE_HEADER_TEXT   = "text-red-300";
+/** Unhealthy row: red-tinted background + top border. */
+export const TABLE_ROW_UNHEALTHY = "border-t border-red-900/60 bg-red-950/40";
+/** Healthy row: subtle top border. */
+export const TABLE_ROW_HEALTHY   = "border-t border-rose-900/20";
+/** Section/card divider border (use alongside `border-t` when needed). */
+export const BORDER_MUTED        = "border-rose-900/30";
 
 // -- Typography --
 /** Dimmed helper / label text. */
-export const TEXT_MUTED = "text-sm text-gray-400";
-export const TEXT_LABEL = "text-xs text-gray-500";
+export const TEXT_MUTED = "text-sm text-rose-200/50";
+export const TEXT_LABEL = "text-xs text-rose-300";
 /** Nav link style (header). */
 export const NAV_LINK   = "text-sm text-white/85 hover:text-red-400";
 
