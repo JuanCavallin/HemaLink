@@ -148,7 +148,7 @@ export default function DashboardPage() {
         const filenames = Object.keys(result?.results || {});
         const label = filenames.length ? filenames.join(', ') : `Result ${now.toLocaleString()}`;
         const item = {
-          id: now.toISOString(),
+          id: result.run_id != null ? String(result.run_id) : now.toISOString(),
           createdAt: now.toISOString(),
           label,
           age,

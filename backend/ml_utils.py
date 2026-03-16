@@ -10,17 +10,19 @@ import traceback
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-# Module-level model holders — populated at startup by load_models_from_s3()
+# Module-level model holders — populated at startup by load_models()
 ANEMIA_MODEL = None
 THYROID_MODEL = None
 DIABETES_MODEL = None
 CKD_MODEL = None
 
-MODEL_S3_KEYS = {
-    "ANEMIA":   "models/anemia_rf_model.pkl",
-    "THYROID":  "models/thyroid_rf_model.pkl",
-    "DIABETES": "models/diabetes_rf_model.pkl",
-    "CKD":      "models/ckd_rf_model.pkl",
+# Local paths relative to this file's directory
+_MODELS_DIR = os.path.join(os.path.dirname(__file__), "ML_Models")
+MODEL_LOCAL_PATHS = {
+    "ANEMIA":   os.path.join(_MODELS_DIR, "anemia_rf_model.pkl"),
+    "THYROID":  os.path.join(_MODELS_DIR, "thyroid_rf_model.pkl"),
+    "DIABETES": os.path.join(_MODELS_DIR, "diabetes_rf_model.pkl"),
+    "CKD":      os.path.join(_MODELS_DIR, "ckd_rf_model.pkl"),
 }
 
 ANEMIA_FEATURES = ["Gender", "Hemoglobin", "MCH", "MCHC", "MCV"]
@@ -48,11 +50,12 @@ CKD_FEATURES = [
 ]
 
 
-def load_models_from_s3(s3_client, bucket: str) -> None:
+def load_models() -> None:
     """
-    Download ML model .pkl files from S3 into memory and load with joblib.
+    Load ML model .pkl files from the local ML_Models/ directory.
     Called once during app lifespan startup. If a model fails to load, it
     remains None and predictions for that model will return "Model not loaded".
+    S3 copies serve as off-site artifacts only and are not used at runtime.
     """
     global ANEMIA_MODEL, THYROID_MODEL, DIABETES_MODEL, CKD_MODEL
     setters = {
@@ -61,15 +64,13 @@ def load_models_from_s3(s3_client, bucket: str) -> None:
         "DIABETES": lambda m: globals().update(DIABETES_MODEL=m),
         "CKD":      lambda m: globals().update(CKD_MODEL=m),
     }
-    for key, s3_key in MODEL_S3_KEYS.items():
+    for key, path in MODEL_LOCAL_PATHS.items():
         try:
-            response = s3_client.get_object(Bucket=bucket, Key=s3_key)
-            model_bytes = response["Body"].read()
-            model = joblib.load(io.BytesIO(model_bytes))
+            model = joblib.load(path)
             setters[key](model)
-            logging.info("Loaded model %s from s3://%s/%s", key, bucket, s3_key)
+            logging.info("Loaded model %s from %s", key, path)
         except Exception as e:
-            logging.error("Failed to load model %s from S3 (s3://%s/%s): %s", key, bucket, s3_key, e)
+            logging.error("Failed to load model %s from %s: %s", key, path, e)
 
 
 def get_prediction(model, model_name, features, data_dict) -> dict:

@@ -48,7 +48,7 @@ s3 = boto3.client("s3", region_name=os.getenv("AWS_REGION", "us-east-1"))
 @asynccontextmanager
 async def lifespan(app):
     db_helpers.init_schema(engine)
-    ml_utils.load_models_from_s3(s3, S3_BUCKET)
+    ml_utils.load_models()
     yield
 
 app = FastAPI(lifespan=lifespan)

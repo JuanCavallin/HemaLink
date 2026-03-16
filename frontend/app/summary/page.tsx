@@ -66,7 +66,10 @@ export default function SummaryPage() {
           if (typeof window !== 'undefined') {
             window.localStorage.setItem(HISTORY_KEY, JSON.stringify(data));
           }
-          setActiveId((prev) => prev ?? (data[0]?.id ?? null));
+          setActiveId((prev) => {
+            const stillValid = prev != null && data.some((item: HistoryItem) => item.id === prev);
+            return stillValid ? prev : (data[0]?.id ?? null);
+          });
         }
       })
       .catch(() => {})
